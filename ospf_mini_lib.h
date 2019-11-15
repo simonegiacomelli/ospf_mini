@@ -4,29 +4,46 @@
 #include "ospf_mini_dep.h"
 #include <list>
 #include <set>
+#include <map>
 
 using namespace std;
+static const long STALE_PEER_DEVICE_MS = 2000;
 
 typedef string Address;
 
 class PeerDevice {
+private:
+    unsigned long birth_ms;
 public:
     ~PeerDevice() {
     }
 
     Address address;
     int cost;
-    unsigned long millis;
+
 
     bool operator<(const PeerDevice &other) const {
         return address < other.address;
     }
 
     void debug() {
-        printf("  PeerDevice address:");
-        printf("%s", address.c_str());
-        printf(" cost: %d", cost);
-        printf("\n");
+        printf("  PeerDevice %s\n", to_string().c_str());
+    }
+
+    string to_string() const {
+        return address + " cost=" + std::to_string(cost) + " age=" + std::to_string(millis() - birth_ms);
+    }
+
+    void refresh() {
+        birth_ms = millis();
+    }
+
+    unsigned long age() const {
+        return millis() - birth_ms;
+    }
+
+    bool stale() const {
+        return age() > STALE_PEER_DEVICE_MS;
     }
 };
 
@@ -43,30 +60,67 @@ class Message {
     char *body;
 };
 
+template<class K, class V>
+bool mapContainsKey(std::map<K, V> &map, K key) {
+    if (map.find(key) == map.end()) return false;
+    return true;
+}
+
 class OspfNano {
 protected:
     LinkState linkState;
+    map<Address, PeerDevice> peers;
     LinkState prev_linkState;
     set<LinkState> database;
 
+
 public:
 
-    virtual void newAdjacency() = 0;
+    virtual void detectPeerDevices() = 0;
 
     virtual void poll() = 0;
 
+    void detectStalePeerDevices() {
+        set<Address> stale;
+        for (const auto &any : peers) {
+            if (any.second.stale()) {
+                stale.insert(any.second.address);
+                printf("%s STALE\n", any.second.to_string().c_str());
+            }
+        }
+
+        for (auto addr : stale)
+        {
+            peers.erase(addr);
+        }
+
+    }
+
     int handle() {
         //delay(1000);
-        //printf("millis,%lu\n",millis());
+        //printf("ms,%lu\n",ms());
         poll();
         //debug();
-        newAdjacency();
-
+        detectPeerDevices();
+        detectStalePeerDevices();
         return 0;
     }
 
-    void lsaReceived(LinkState &ls) {
+    void addPeerDevice(PeerDevice device) {
+        if (!mapContainsKey(peers, device.address)) {
+//            new element
+            printf("%s NEW\n", device.to_string().c_str());
+            peers[device.address] = device;
+        }
 
+        peers[device.address].refresh();
+        //        const auto res = linkState.adjacency.insert(device);
+//        if (res.second) {
+//            //new element
+//            printf("%s NEW\n", device.to_string().c_str());
+//        }
+//        linkState.
+//        res.first->refresh();
     }
 
     int debug() {

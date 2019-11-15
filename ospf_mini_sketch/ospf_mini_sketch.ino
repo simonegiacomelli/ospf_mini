@@ -16,7 +16,7 @@ using namespace std;
 
 struct OspfNanoBLE : OspfNano {
 
-    void newAdjacency() override {
+    void detectPeerDevices() override {
 
     }
 
@@ -28,8 +28,7 @@ struct OspfNanoBLE : OspfNano {
         auto p = PeerDevice();
         p.address = peripheral.address().c_str();
         p.cost = -peripheral.rssi();
-        p.millis = millis();
-        linkState.adjacency.insert(p);
+        addPeerDevice(p);
     }
 };
 
