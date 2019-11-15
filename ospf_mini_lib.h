@@ -61,18 +61,15 @@ class Message {
 };
 
 template<class K, class V>
-bool mapContainsKey(std::map<K, V> &map, K key) {
-    if (map.find(key) == map.end()) return false;
-    return true;
+bool mapContainsKey(std::map<K, V> &map, K &key) {
+    return map.find(key) != map.end();
 }
 
 class OspfNano {
 protected:
     LinkState linkState;
     map<Address, PeerDevice> peers;
-    LinkState prev_linkState;
     set<LinkState> database;
-
 
 public:
 
@@ -89,7 +86,7 @@ public:
             }
         }
 
-        for (auto addr : stale)
+        for (const auto& addr : stale)
         {
             peers.erase(addr);
         }
@@ -97,6 +94,7 @@ public:
     }
 
     int handle() {
+        delay(100);
         //delay(1000);
         //printf("ms,%lu\n",ms());
         poll();
@@ -112,19 +110,11 @@ public:
             printf("%s NEW\n", device.to_string().c_str());
             peers[device.address] = device;
         }
-
         peers[device.address].refresh();
-        //        const auto res = linkState.adjacency.insert(device);
-//        if (res.second) {
-//            //new element
-//            printf("%s NEW\n", device.to_string().c_str());
-//        }
-//        linkState.
-//        res.first->refresh();
     }
 
     int debug() {
-        printf("\nDebug linkState.adjacency msec %d\n", millis());
+        printf("\nDebug linkState.adjacency msec %lu\n", millis());
         for (auto peer : linkState.adjacency) {
             peer.debug();
         }
