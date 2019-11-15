@@ -30,8 +30,10 @@ public:
         printf("  PeerDevice %s\n", to_string().c_str());
     }
 
-    string to_string() const {
-        return address + " cost=" + std::to_string(cost) + " age=" + std::to_string(millis() - birth_ms);
+    string to_string() {
+        PeerDevice *p = this;
+        return address + " cost=" + std::to_string(cost) + " age=" + std::to_string(age()) + " p=" +
+               std::to_string((long) p);
     }
 
     void refresh() {
@@ -68,7 +70,7 @@ bool mapContainsKey(std::map<K, V> &map, K &key) {
 class OspfNano {
 protected:
     LinkState linkState;
-    std::map<Address, PeerDevice> peers;
+    std::map<Address, PeerDevice*> peers;
     set<LinkState> database;
 
 public:
@@ -80,9 +82,11 @@ public:
     void detectStalePeerDevices() {
         set<Address> stale;
         for (const auto &any : peers) {
-            if (any.second.stale()) {
-                stale.insert(any.second.address);
-                printf("%s GONE\n", any.second.to_string().c_str());
+            if (any.second->stale()) {
+                stale.insert(any.second->address);
+                auto peer = peers[any.second->address];
+                printf("%s GONE\n", peer->to_string().c_str());
+                delete peer;
             }
         }
 
@@ -93,7 +97,7 @@ public:
     }
 
     int handle() {
-        delay(100);
+//        delay(100);
         //delay(1000);
         //printf("ms,%lu\n",ms());
         poll();
@@ -106,10 +110,13 @@ public:
     void addPeerDevice(PeerDevice device) {
         if (!mapContainsKey(peers, device.address)) {
 //            new element
-            printf("%s NEW\n", device.to_string().c_str());
-            peers[device.address] = device;
+            auto p= new PeerDevice();
+            p->address = device.address;
+            p->cost = device.cost;
+            printf("%s NEW\n", p->to_string().c_str());
+            peers[device.address] = p;
         }
-        peers[device.address].refresh();
+        peers[device.address]->refresh();
     }
 
     int debug() {
