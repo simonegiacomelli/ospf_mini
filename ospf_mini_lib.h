@@ -15,7 +15,12 @@ class PeerDevice {
 private:
     unsigned long birth_ms;
 public:
+    PeerDevice(){
+        refresh();
+        //printf("%s NEW\n",to_string().c_str());
+    }
     ~PeerDevice() {
+//        printf("%s DEL\n",to_string().c_str());
     }
 
     Address address;
@@ -108,7 +113,8 @@ public:
     }
 
     void addPeerDevice(PeerDevice device) {
-        if (!mapContainsKey(peers, device.address)) {
+        bool present = mapContainsKey(peers, device.address);
+        if (!present) {
 //            new element
             auto p= new PeerDevice();
             p->address = device.address;

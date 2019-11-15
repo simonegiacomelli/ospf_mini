@@ -40,6 +40,8 @@ struct OspfNanoFile : OspfNano {
 
 
 int main() {
+    PeerDevice p;
+
     OspfNanoFile ospf;
     using namespace this_thread; // sleep_for, sleep_until
 //    using namespace chrono; // nanoseconds, system_clock, seconds

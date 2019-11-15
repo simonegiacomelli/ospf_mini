@@ -15,7 +15,7 @@
 #include <fstream>
 #include <list>
 
-unsigned long startup_millis = -1;
+unsigned long startup_millis = 0;
 
 #endif
 

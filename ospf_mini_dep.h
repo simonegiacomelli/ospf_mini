@@ -19,7 +19,7 @@ extern long startup_millis;
 unsigned long millis() {
     using namespace std::chrono;
     auto res = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-    if (startup_millis == -1)
+    if (startup_millis == 0)
         startup_millis = res;
     return res - startup_millis;
 }
