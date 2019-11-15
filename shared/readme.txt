@@ -1,0 +1,1 @@
+this folder contains the shared files between the test processes in order to simulate a shared network
