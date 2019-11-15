@@ -15,7 +15,7 @@
 using namespace std;
 
 struct OspfNanoFile : OspfNano {
-    void updateAdjacency() override {
+    void newAdjacency() override {
         updateset(linkState.adjacency);
     }
 
@@ -26,6 +26,8 @@ struct OspfNanoFile : OspfNano {
             stringstream ss(line);
             auto p = PeerDevice();
             ss >> p.address;
+            if (p.address == "")
+                break;
             ss >> p.cost;
             p.cost = -p.cost;
             p.millis = millis();
@@ -43,7 +45,7 @@ int main() {
     OspfNanoFile ospf;
     using namespace this_thread; // sleep_for, sleep_until
 //    using namespace chrono; // nanoseconds, system_clock, seconds
-    while(true) {
+    while (true) {
         ospf.handle();
     }
 

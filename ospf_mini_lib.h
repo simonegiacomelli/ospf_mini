@@ -46,11 +46,12 @@ class Message {
 class OspfNano {
 protected:
     LinkState linkState;
+    LinkState prev_linkState;
     set<LinkState> database;
 
 public:
 
-    virtual void updateAdjacency() = 0;
+    virtual void newAdjacency() = 0;
 
     virtual void poll() = 0;
 
@@ -58,8 +59,9 @@ public:
         //delay(1000);
         //printf("millis,%lu\n",millis());
         poll();
-        debug();
-        updateAdjacency();
+        //debug();
+        newAdjacency();
+
         return 0;
     }
 
