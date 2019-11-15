@@ -41,7 +41,7 @@ void bleCentralDiscoverHandler(BLEDevice peripheral) {
 
 void setup() {
     Serial.begin(9600);
-    //while (!Serial);
+    while (!Serial);
 
     // begin initialization
     if (!BLE.begin()) {

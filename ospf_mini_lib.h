@@ -68,7 +68,7 @@ bool mapContainsKey(std::map<K, V> &map, K &key) {
 class OspfNano {
 protected:
     LinkState linkState;
-    map<Address, PeerDevice> peers;
+    std::map<Address, PeerDevice> peers;
     set<LinkState> database;
 
 public:
@@ -82,12 +82,11 @@ public:
         for (const auto &any : peers) {
             if (any.second.stale()) {
                 stale.insert(any.second.address);
-                printf("%s STALE\n", any.second.to_string().c_str());
+                printf("%s GONE\n", any.second.to_string().c_str());
             }
         }
 
-        for (const auto& addr : stale)
-        {
+        for (const auto &addr : stale) {
             peers.erase(addr);
         }
 
