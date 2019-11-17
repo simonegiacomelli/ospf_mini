@@ -1,6 +1,11 @@
 
 
-#include <ArduinoBLE.h>
+#ifdef ARDUINO_ARCH_MBED
+#include "ospf_mini_lib.h"
+#else
+//for CLion compilation
+#include "../../ospf_mini_lib.h"
+#endif
 
 // BLE Battery Service
 //BLEService batteryService("180F");
@@ -12,8 +17,13 @@ BLEUnsignedCharCharacteristic batteryLevelChar("2A19",  // standard 16-bit chara
 
 int counter = 0;  // last battery level reading from analog input
 long previousMillis = 0;  // last time the battery level was checked, in ms
+AntiSpin ap_loop(2000);
 
 void setup() {
+    ap_loop.setOnExecuteLambda([]() {
+        printf("Main loop executing\n");
+    });
+
     Serial.begin(9600);    // initialize serial communication
     //while (!Serial);
 
@@ -43,7 +53,7 @@ void setup() {
 }
 
 void loop() {
-
+    ap_loop.spin();
     BLE.advertise();
 
     // wait for a BLE central
