@@ -21,6 +21,7 @@
 #include "HCI.h"
 
 #include "GAP.h"
+#include "../BLEDevice.h"
 
 #define GAP_MAX_DISCOVERED_QUEUE_SIZE 5
 

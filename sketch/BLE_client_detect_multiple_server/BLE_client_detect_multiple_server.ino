@@ -2,12 +2,15 @@
 #include "mbed.h"
 #include <ArduinoBLE.h>
 #include "ospf_mini_lib.h"
+
 #else
 //for CLion compilation
 #include "../../ospf_mini_lib.h"
 #include "../../ArduinoBLE/src/BLEDevice.h"
 #include "../../ArduinoBLE/src/ArduinoBLE.h"
 #endif
+
+#include <list>
 void setup() {
   Serial.begin(9600);
   //while (!Serial);
@@ -25,18 +28,13 @@ void setup() {
   // start scanning for peripheral
   BLE.scan();
 }
-bool adv = false;
-
+std::list<BLEDevice> servers;
 void loop() {
-  if (adv) {
-    Serial.println("looping");
-    delay(500);
-  }
+
   BLE.poll();
   
   // check if a peripheral has been discovered
   BLEDevice peripheral = BLE.available();
-
   if (peripheral) {
     // discovered a peripheral, print out address, local name, and advertised service
     Serial.print("Found ");
@@ -51,7 +49,7 @@ void loop() {
     // "CC2650 SensorTag"
     if (peripheral.advertisedServiceUuid().equalsIgnoreCase("1234")) {
       // stop scanning
-      BLE.stopScan();
+//      BLE.stopScan();
 
       monitorSensorTagButtons(peripheral);
 
@@ -59,7 +57,7 @@ void loop() {
       Serial.println("Starting scan again");
       adv = true;
       peripheral.disconnect();
-      BLE.scan();
+      //BLE.scan();
     }
   }
 }
@@ -107,8 +105,8 @@ void monitorSensorTagButtons(BLEDevice peripheral) {
     Serial.println("Press the right and left buttons on your SensorTag.");
   }
 
-  while (peripheral.connected()) {
-//  if (peripheral.connected()) {
+  //while (peripheral.connected()) {
+  if (peripheral.connected()) {
     // while the peripheral is connected
 
     // check if the value of the simple key characteristic has been updated
