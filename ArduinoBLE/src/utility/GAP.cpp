@@ -241,7 +241,7 @@ BLEDevice GAPClass::available()
         return result;
       } else {
         continue;
-      } 
+      }
     }
   }
 
@@ -278,6 +278,19 @@ void GAPClass::handleLeAdvertisingReport(uint8_t type, uint8_t addressType, uint
   if (!_scanning) {
     return;
   }
+
+    //type
+    //0x00 Connectable and scannable undirected advertising (ADV_IND)
+    //0x01 Connectable directed advertising (ADV_DIRECT_IND)
+    //0x02 Scannable undirected advertising (ADV_SCAN_IND)
+    //0x03 Non connectable undirected advertising (ADV_NONCONN_IND)
+    //0x04 Scan Response (SCAN_RSP)
+
+    //addressType
+    //0x00 Public Device Address
+    //0x01 Random Device Address
+    //0x02 Public Identity Address (Corresponds to Resolved Private Address)
+    //0x03 Random (static) Identity Address (Corresponds to Resolved Private Address)
 
   if (_discoverEventHandler && type == 0x03) {
     // call event handler and skip adding to discover list
