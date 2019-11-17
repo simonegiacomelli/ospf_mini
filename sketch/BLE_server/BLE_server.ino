@@ -8,8 +8,8 @@
 #endif
 
 // BLE Battery Service
-//BLEService batteryService("180F");
-BLEService batteryService("1234");
+BLEService batteryService("180F");
+//BLEService batteryService("1234");
 // BLE Battery Level Characteristic
 BLEUnsignedCharCharacteristic batteryLevelChar("2A19",  // standard 16-bit characteristic UUID
                                                BLERead |
@@ -36,7 +36,7 @@ void setup() {
         while (1);
     }
 
-    auto name = "SHAZAM" + BLE.address();
+    static auto name = "SHAZAM" + BLE.address();
     name.replace(":", "");
     BLE.setLocalName(name.c_str());
 

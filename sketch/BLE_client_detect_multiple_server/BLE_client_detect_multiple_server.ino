@@ -39,7 +39,7 @@ void loop() {
 
     if (peripheral) {
         // discovered a peripheral, print out address, local name, and advertised service
-        Serial.print("Found v1.0 ");
+        Serial.print("Found v1.1 ");
         Serial.print(peripheral.address());
         Serial.print(" '");
         Serial.print(peripheral.localName());
@@ -49,7 +49,8 @@ void loop() {
 
         // Check if the peripheral is a SensorTag, the local name will be:
         // "CC2650 SensorTag"
-        if (peripheral.advertisedServiceUuid().startsWith("1234")) {
+
+        if (peripheral.advertisedServiceUuid().equalsIgnoreCase("180F")) {
             // stop scanning
             BLE.stopScan();
 
@@ -72,8 +73,8 @@ void monitorSensorTagButtons(BLEDevice peripheral) {
     }
 
     // discover peripheral attributes
-    Serial.println("Discovering service 1234 ...");
-    if (peripheral.discoverService("1234")) {
+    Serial.println("Discovering service 180F ...");
+    if (peripheral.discoverService("180F")) {
         Serial.println("Service discovered");
     } else {
         Serial.println("Attribute discovery failed.");
