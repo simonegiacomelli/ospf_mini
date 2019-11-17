@@ -7,11 +7,16 @@
 #include "../../ospf_mini_lib.h"
 #include "../../ArduinoBLE/src/BLEDevice.h"
 #include "../../ArduinoBLE/src/ArduinoBLE.h"
+
 #endif
+AntiSpin ap_loop(2000);
 
 void setup() {
+    ap_loop.setOnExecuteLambda([]() {
+        printf("Main loop executing\n");
+    });
     Serial.begin(9600);
-    while (!Serial);
+    //while (!Serial);
 
     // begin initialization
     if (!BLE.begin()) {
@@ -28,12 +33,13 @@ void setup() {
 }
 
 void loop() {
+    ap_loop.spin();
     // check if a peripheral has been discovered
     BLEDevice peripheral = BLE.available();
 
     if (peripheral) {
         // discovered a peripheral, print out address, local name, and advertised service
-        Serial.print("Found ");
+        Serial.print("Found v1.0 ");
         Serial.print(peripheral.address());
         Serial.print(" '");
         Serial.print(peripheral.localName());
