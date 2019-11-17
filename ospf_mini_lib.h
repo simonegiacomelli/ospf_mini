@@ -15,10 +15,11 @@ class PeerDevice {
 private:
     unsigned long birth_ms;
 public:
-    PeerDevice(){
+    PeerDevice() {
         refresh();
         //printf("%s NEW\n",to_string().c_str());
     }
+
     ~PeerDevice() {
 //        printf("%s DEL\n",to_string().c_str());
     }
@@ -75,7 +76,7 @@ bool mapContainsKey(std::map<K, V> &map, K &key) {
 class OspfNano {
 protected:
     LinkState linkState;
-    std::map<Address, PeerDevice*> peers;
+    std::map<Address, PeerDevice> peers;
     set<LinkState> database;
 
 public:
@@ -87,11 +88,11 @@ public:
     void detectStalePeerDevices() {
         set<Address> stale;
         for (const auto &any : peers) {
-            if (any.second->stale()) {
-                stale.insert(any.second->address);
-                auto peer = peers[any.second->address];
-                printf("%s GONE\n", peer->to_string().c_str());
-                delete peer;
+            if (any.second.stale()) {
+                stale.insert(any.second.address);
+                auto &peer = peers[any.second.address];
+                printf("%s GONE\n", peer.to_string().c_str());
+
             }
         }
 
@@ -112,17 +113,13 @@ public:
         return 0;
     }
 
-    void addPeerDevice(PeerDevice device) {
+    void addPeerDevice(PeerDevice &device) {
         bool present = mapContainsKey(peers, device.address);
         if (!present) {
-//            new element
-            auto p= new PeerDevice();
-            p->address = device.address;
-            p->cost = device.cost;
-            printf("%s NEW\n", p->to_string().c_str());
-            peers[device.address] = p;
+            printf("%s NEW\n", device.to_string().c_str());
+            peers[device.address] = device;
         }
-        peers[device.address]->refresh();
+        peers[device.address].refresh();
     }
 
     int debug() {
