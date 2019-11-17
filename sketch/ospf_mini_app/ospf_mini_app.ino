@@ -8,8 +8,9 @@
 #include "ospf_mini_lib.h"
 #else
 //for CLion compilation
-#include "../ospf_mini_lib.h"
-
+#include "../../ospf_mini_lib.h"
+#include "../../ArduinoBLE/src/BLEDevice.h"
+#include "../../ArduinoBLE/src/ArduinoBLE.h"
 #endif
 
 using namespace std;
