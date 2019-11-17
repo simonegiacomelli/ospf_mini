@@ -48,7 +48,7 @@ void loop() {
             BLE.stopScan();
 
             monitorSensorTagButtons(peripheral);
-
+            printf("enabling scan\n");
             // peripheral disconnected, start scanning again
             BLE.scan();
         }
