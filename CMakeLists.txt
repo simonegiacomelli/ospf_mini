@@ -4,6 +4,7 @@ project(ospf_mini_lib)
 set(CMAKE_CXX_STANDARD 11)
 
 add_executable(ospf_mini_lib ospf_mini_dep main/main.cpp)
+add_executable(main_antispin ospf_mini_dep main/main_antispin.cpp)
 
 add_executable(sketch_ospf_mini_app ospf_mini_dep sketch/ospf_mini_app/ospf_mini_app.ino)
 add_executable(sketch_BLE_client3 ospf_mini_dep sketch/BLE_client3/BLE_client3.ino)
