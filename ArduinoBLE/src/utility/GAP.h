@@ -23,7 +23,6 @@
 #include "utility/BLELinkedList.h"
 
 #include "BLEDevice.h"
-#include "../BLEDevice.h"
 
 class GAPClass {
 public:

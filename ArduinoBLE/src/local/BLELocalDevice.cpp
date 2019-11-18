@@ -17,17 +17,13 @@
   Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#include "../utility/ATT.h"
-#include "../utility/HCI.h"
-#include "../utility/GAP.h"
-#include "../utility/GATT.h"
-#include "../utility/L2CAPSignaling.h"
+#include "utility/ATT.h"
+#include "utility/HCI.h"
+#include "utility/GAP.h"
+#include "utility/GATT.h"
+#include "utility/L2CAPSignaling.h"
 
 #include "BLELocalDevice.h"
-#include "../utility/HCI.h"
-#include "../utility/GAP.h"
-#include "../BLEDevice.h"
-#include "../utility/ATT.h"
 
 BLELocalDevice::BLELocalDevice()
 {
