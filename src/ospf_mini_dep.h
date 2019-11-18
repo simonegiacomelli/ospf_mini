@@ -12,8 +12,8 @@
 #include "mbed.h"
 #else
 //for CLion compilation
-#include "../../ArduinoBLE/src/BLEDevice.h"
-#include "../../ArduinoBLE/src/ArduinoBLE.h"
+//#include "BLEDevice.h"
+//#include "ArduinoBLE.h"
 
 #include <chrono>
 #include <thread>
