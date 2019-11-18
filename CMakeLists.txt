@@ -11,5 +11,5 @@ add_executable(sketch_BLE_server ospf_mini_dep sketch/BLE_server/BLE_server.ino)
 add_executable(sketch_BLE_client3 ospf_mini_dep sketch/BLE_client3/BLE_client3.ino)
 add_executable(sketch_BLE_clientdetect_multiple_server ospf_mini_dep sketch/BLE_client_detect_multiple_server/BLE_client_detect_multiple_server.ino)
 
-FILE(GLOB ArduinoBLE  ArduinoBLE/src/*.cpp ArduinoBLE/src/*.h  ArduinoBLE/src/local/*.cpp ArduinoBLE/src/local/*.h  ArduinoBLE/src/utility/*.cpp ArduinoBLE/src/utility/*.h)
+FILE(GLOB ArduinoBLE src/*.cpp src/*.h src/local/*.cpp src/local/*.h src/utility/*.cpp src/utility/*.h)
 add_executable(fake_BLE ${ArduinoBLE})

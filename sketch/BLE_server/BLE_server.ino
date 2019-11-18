@@ -4,7 +4,7 @@
 #include "ospf_mini_lib.h"
 #else
 //for CLion compilation
-#include "../../ospf_mini_lib.h"
+#include "../../src/ospf_mini_lib.h"
 #endif
 
 // BLE Battery Service

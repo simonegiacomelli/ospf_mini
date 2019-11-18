@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include <stdio.h>
-#include "../ospf_mini_lib.h"
+#include "../src/ospf_mini_lib.h"
 //
 #include <chrono>
 #include <thread>
