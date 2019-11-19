@@ -113,12 +113,15 @@ int BLELocalCharacteristic::writeValue(const uint8_t value[], int length)
   }
 
   if ((_properties & BLEIndicate) && (_cccdValue & 0x0002)) {
+      Serial.print(" wv BLEIndicate 2 ");
     return ATT.handleInd(valueHandle(), _value, _valueLength);
   } else if ((_properties & BLENotify) && (_cccdValue & 0x0001)) {
+      Serial.print(" wv BLENotify 1 ");
     return ATT.handleNotify(valueHandle(), _value, _valueLength);
   }
 
   if (_broadcast) {
+      printf(" wv broadcast ");
     uint16_t serviceUuid = GATT.serviceUuidForCharacteristic(this);
 
     GAP.setAdvertisedServiceData(serviceUuid, value, length);

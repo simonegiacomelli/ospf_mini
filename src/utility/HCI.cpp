@@ -415,6 +415,11 @@ int HCIClass::leConnUpdate(uint16_t handle, uint16_t minInterval, uint16_t maxIn
 
 int HCIClass::sendAclPkt(uint16_t handle, uint8_t cid, uint8_t plen, void* data)
 {
+    Serial.print(" sendAclPkt ");
+    Serial.print(_pendingPkt);
+    Serial.print("/");
+    Serial.print(_maxPkt);
+    Serial.print(" ");
   while (_pendingPkt >= _maxPkt) {
     poll();
   }

@@ -499,7 +499,18 @@ bool ATTClass::disconnect()
 
 BLEDevice ATTClass::central()
 {
-  for (int i = 0; i < ATT_MAX_PEERS; i++) {
+    int count=0;
+    int div01 =0;
+    for (int i = 0; i < ATT_MAX_PEERS; i++) {
+        if (_peers[i].connectionHandle != 0xffff ) {
+            count ++;
+            if( _peers[i].role != 0x01 )
+                div01 ++;
+        }
+    }
+    printf("central() peers count=%d div01=%d\n",count,div01);
+
+    for (int i = 0; i < ATT_MAX_PEERS; i++) {
     if (_peers[i].connectionHandle == 0xffff || _peers[i].role != 0x01) {
       continue;
     }
@@ -532,7 +543,9 @@ bool ATTClass::handleNotify(uint16_t handle, const uint8_t* value, int length)
     memcpy(&notification[notificationLength], value, length);
     notificationLength += length;
 
+    Serial.print(" handleNotify (sendAclPkt");
     HCI.sendAclPkt(_peers[i].connectionHandle, ATT_CID, notificationLength, notification);
+    Serial.print(" done) ");
 
     numNotifications++;
   }
