@@ -6,3 +6,7 @@ use cketch/BLE_server for using Arduino as peripheral for this html/javascript p
 
 # Usage
 Open the html page (double click on the html page)
+
+## Useful Links
+https://github.com/WebBluetoothCG/web-bluetooth/issues/42 <br>
+https://stackoverflow.com/questions/53400358/is-it-possible-to-connect-to-multiple-ble-devices-using-web-bluetooth
