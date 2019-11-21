@@ -5,6 +5,8 @@
 #else
 //for CLion compilation
 #include "../../src/ospf_mini_lib.h"
+#include "../../src/BLEService.h"
+
 #endif
 
 // BLE Battery Service
@@ -12,6 +14,7 @@ BLEService batteryService("180F");
 //BLEService batteryService("1234");
 // BLE Battery Level Characteristic
 BLEUnsignedCharCharacteristic batteryLevelChar("2A19",  // standard 16-bit characteristic UUID
+                                                BLEWrite |
                                                BLERead |
                                                BLENotify); // remote clients will be able to get notifications if this characteristic changes
 
@@ -25,9 +28,11 @@ void setup() {
     });
 
     Serial.begin(9600);    // initialize serial communication
-    //while (!Serial);
+    while (!Serial);
+//    BLE.debug(Serial);
 
-    pinMode(LED_BUILTIN, OUTPUT); // initialize the built-in LED pin to indicate when a central is connected
+pinMode(LED_BUILTIN, OUTPUT); // initialize the built-in LED pin to indicate when a central is connected
+
 
     // begin initialization
     if (!BLE.begin()) {
@@ -54,6 +59,7 @@ void setup() {
 
 void loop() {
     ap_loop.spin();
+//    delay(350);
     BLE.advertise();
 
     // wait for a BLE central
@@ -68,14 +74,15 @@ void loop() {
         if (central.connected()) {
             long currentMillis = millis();
             // if x ms have passed, check the battery level:
-            if (currentMillis - previousMillis >= 500) {
+            if (currentMillis - previousMillis >= 3000) {
                 previousMillis = currentMillis;
                 int next = ++counter;
                 Serial.print("Connected to central: ");
                 Serial.print(central.address());
                 Serial.print(" sending value: ");
-                Serial.println(next);
+                Serial.print(next);
                 batteryLevelChar.writeValue(next);
+                Serial.println(". Value sent");
             }
 
         }
