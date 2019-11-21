@@ -144,6 +144,7 @@ public:
     }
 
     bool spin() {
+        spin_counter++;
         auto ms = millis();
         auto delta = ms - last_execute_millis;
         if (counter == 0 || delta > window_ms) {
@@ -155,6 +156,7 @@ public:
     }
 
     unsigned long counter = 0;
+    unsigned long spin_counter = 0;
 protected:
     std::function<void()> onExecuteLambda;
     unsigned long last_execute_millis;
