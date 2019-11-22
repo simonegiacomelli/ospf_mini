@@ -6,6 +6,7 @@ const user = "3s897csODyMGcSwQ75LY7uTipFBIBnzsDvrBvHfZ6Pt6xQMsLnhGH0PVvetUrQcU"
 
 var client = new Paho.Client(hostname, Number(port), clientId);
 
+var messages = []
 function connect(){
     console.log("Init")
     console.log(client);
@@ -47,6 +48,7 @@ function onConnectionLost(responseObject) {
 // called when a message arrives
 function onMessageArrived(message) {
     console.log("onMessageArrived:"+message.payloadString);
+    handle_message(message.payloadString )
 }
 
 function onFail(context) {
@@ -57,4 +59,31 @@ function onFail(context) {
 function disconnect() {
     console.log("INFO", "Disconnecting from Server.");
     client.disconnect();
+}
+
+
+
+function handle_message(message){
+    
+    message = parse_message(message);
+    messages.push(message)
+
+    messages = moving_avg(5, messages)
+    console.log(messages)
+    document.getElementById('output').innerText += message + "\n";
+    document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
+
+}
+
+function parse_message(message){
+    // console.log(message)
+    return message.split(","); 
+}
+
+function moving_avg(num_messages, messages){
+    if(messages.length > num_messages){
+        messages = messages.slice(0, num_messages+1)
+        return messages
+    }
+    return messages
 }

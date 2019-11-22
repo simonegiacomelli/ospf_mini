@@ -2,11 +2,23 @@
     <head>
         <script type="text/javascript" src="paho-mqtt.js"></script>
         <script type="text/javascript" src="main.js"></script>
+
+        <style>
+            #output {
+                overflow: auto;
+                max-height: 500px;
+                border: solid 1px black;
+            }
+        </style>
+
     </head>
 
     <body onload="connect()">
         <button onclick="connect()">Connect</button>
         <button onclick="disconnect()">Disconnecct</button>
+
+        <div id="output">
+        </div>
     </body>
 
 </html>
