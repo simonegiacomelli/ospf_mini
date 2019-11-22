@@ -152,12 +152,21 @@ class GmqttClient:
         # print('SUBSCRIBED')
         pass
 
+f = open('save-beacon-session.csv','w')
+
+def handle_rssi_message(topic,payload):
+    msg = payload.decode("utf-8")
+    f.write(f'{msg}\n')
+    f.flush()
+    print(msg)
+    #timestamp = time.time().split()
+    #print(msg.split(',') + timestamp)
+
 
 def main():
     client = GmqttClient()
     client.connect()
-    client.publish('cyber/rssi', 'ciao simone!')
-    client.subscribe('cyber/rssi', lambda x, y : print(x, y))
+    client.subscribe('cyber/rssi', handle_rssi_message)
     client.thread.join()
 
 
