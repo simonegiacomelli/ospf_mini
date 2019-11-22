@@ -159,8 +159,8 @@ def handle_rssi_message(topic,payload):
     f.write(f'{msg}\n')
     f.flush()
     print(msg)
-    #timestamp = time.time().split()
-    #print(msg.split(',') + timestamp)
+    timestamp = str(time.time()).split('.')
+    print(msg.split(',') + [timestamp[0]])
 
 
 def main():
