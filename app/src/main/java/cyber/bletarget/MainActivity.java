@@ -38,6 +38,10 @@ import android.view.Menu;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -58,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                connectBeacons();
+                beaconManager.connectBeacons();
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
@@ -134,18 +138,75 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
-    class CB extends BluetoothGattCallback {
-        String address;
+    BeaconManager beaconManager = new BeaconManager();
 
-        CB(String address) {
+    class BeaconManager {
+
+        ArrayList<Beacon> beacons = new ArrayList<>();
+        List<String> addresses = Arrays.asList("d5:61:6b:fb:8d:e3",
+                "d6:82:a5:47:bf:ac",
+                "c5:7c:30:e4:a5:66");
+
+        void connectBeacons() {
+            beacons.clear();
+            // Spawn a new thread to avoid blocking the GUI one
+
+            Thread t = new Thread() {
+                public void run() {
+                    internalRun();
+
+                }
+            };
+            t.setDaemon(true);
+            t.start();
+        }
+
+        private void internalRun() {
+            addresses.forEach(addr -> {
+                String address = addr.toUpperCase();
+                BluetoothDevice device = mBTAdapter.getRemoteDevice(address);
+                Beacon beacon = new Beacon(address, device);
+                BluetoothGatt gatt = device.connectGatt(getApplicationContext(), true, beacon);
+                beacon.gatt = gatt;
+                beacons.add(beacon);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+
+                }
+
+            });
+            while (Thread.currentThread().isAlive()) {
+//                beacons.forEach(d -> {
+//                    d.gatt.readRemoteRssi();
+//                });
+                Log.i("CYBER", "looping");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+
+                }
+            }
+        }
+    }
+
+    class Beacon extends BluetoothGattCallback {
+        private String address;
+        private BluetoothDevice device;
+        private BluetoothGatt gatt;
+        long counter = 0;
+
+        public Beacon(String address, BluetoothDevice device) {
             this.address = address;
+            this.device = device;
         }
 
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i("CYBER", address + " connected");
+                Log.i("CYBER", gatt.getDevice().getAddress() + " " +address + " connected");
+
                 gatt.readRemoteRssi();
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.i("CYBER", address + " disconnected");
@@ -155,20 +216,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             super.onReadRemoteRssi(gatt, rssi, status);
-            Log.i("CYBER", address + " rssi " + rssi);
-            gatt.readRemoteRssi();
+            counter++;
+            if (counter % 100 == 0)
+                Log.i("CYBER", gatt.getDevice().getAddress() + " " + this.gatt.getDevice().getAddress() + " " +address + " rssi " + rssi);
+            this.gatt.readRemoteRssi();
         }
-    }
-
-    void connectBeacons(){
-        // Spawn a new thread to avoid blocking the GUI one
-        new Thread() {
-            public void run() {
-                String address = "f3:4e:e8:df:11:bc".toUpperCase();
-                BluetoothDevice device = mBTAdapter.getRemoteDevice(address);
-                BluetoothGatt gatt = device.connectGatt(getApplicationContext(), true, new CB(address));
-
-            }
-        }.start();
     }
 }
