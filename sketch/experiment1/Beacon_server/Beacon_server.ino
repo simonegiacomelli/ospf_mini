@@ -15,7 +15,7 @@ void setup() {
         printf("Main loop executing %ul\r\n", ap_loop.spin_counter);
     });
     Serial.begin(9600);
-    while (!Serial);
+//    while (!Serial);
 
     pinMode(ledPin, OUTPUT); // use the LED pin as an output
 
@@ -81,9 +81,12 @@ void loop() {
         if (central.connected()) {
             long currentMillis = millis();
             // if x ms have passed, check the battery level:
-            if (currentMillis - previousMillis >= 3000) {
+            if (currentMillis - previousMillis >= 500) {
                 previousMillis = currentMillis;
-                int next = ++counter;
+                if (counter == 100)
+                    counter = 0;
+                //int next = ++counter;
+                int next = -central.rssi();
                 Serial.print("Connected to central: ");
                 Serial.print(central.address());
                 Serial.print(" sending value: ");
