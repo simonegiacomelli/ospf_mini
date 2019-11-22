@@ -35,6 +35,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import android.view.Menu;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -48,12 +49,15 @@ public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
     private BluetoothAdapter mBTAdapter;
+    TextView textView3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
+
+        textView3 = findViewById(R.id.textView3);
         setSupportActionBar(toolbar);
 
         setupBluetooth();
@@ -62,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                beaconManager.connectBeacons();
+
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
             }
@@ -79,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+        beaconManager.connectBeacons();
     }
 
     private void setupBluetooth() {
@@ -90,39 +95,6 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private void testMqtt() {
-        try {
-            testMqttInternal();
-        } catch (Exception ex) {
-            Toast.makeText(getApplicationContext(), "exception" + ex.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void testMqttInternal() throws InterruptedException {
-        final Mqtt5BlockingClient client = Mqtt5Client.builder()
-                .identifier(UUID.randomUUID().toString())
-                .serverHost("mqtt.flespi.io")
-                .simpleAuth(Mqtt5SimpleAuth.builder().username("3s897csODyMGcSwQ75LY7uTipFBIBnzsDvrBvHfZ6Pt6xQMsLnhGH0PVvetUrQcU").build())
-                .buildBlocking();
-
-        client.connect();
-
-        client.publishWith()
-                .topic("cyber/rssi")
-                .qos(MqttQos.AT_LEAST_ONCE)
-                .payload("payload ciao".getBytes())
-                .send();
-//        try (final Mqtt5BlockingClient.Mqtt5Publishes publishes = client.publishes(MqttGlobalPublishFilter.ALL)) {
-//
-//            client.subscribeWith().topicFilter("cyber/rssi").qos(MqttQos.AT_LEAST_ONCE).send();
-//
-//            publishes.receive(1, TimeUnit.SECONDS).ifPresent(System.out::println);
-//            publishes.receive(100, TimeUnit.MILLISECONDS).ifPresent(System.out::println);
-//
-//        } finally {
-//            client.disconnect();
-//        }
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -168,8 +140,10 @@ public class MainActivity extends AppCompatActivity {
             t.start();
         }
 
-        private void internalRun() {
+        MqttRssi mqttRssi = new MqttRssi();
 
+        private void internalRun() {
+            mqttRssi.connect();
 
             addresses.forEach(addr -> {
                 String address = addr.toUpperCase();
@@ -187,9 +161,10 @@ public class MainActivity extends AppCompatActivity {
 
             });
             int index = 0;
+            long counter = 0;
             long prev = System.currentTimeMillis();
             while (Thread.currentThread().isAlive()) {
-
+                counter++;
                 long curr = System.currentTimeMillis();
 
                 index++;
@@ -198,12 +173,16 @@ public class MainActivity extends AppCompatActivity {
 
                 beacons.get(index).gatt.readRemoteRssi();
                 StringBuilder sb = new StringBuilder();
-                beacons.forEach(b -> {
+                for (Beacon b : beacons) {
                     sb.append(b.rssi);
                     sb.append(",");
-                });
+                }
+                sb.append(counter);
 
-                Log.i("CYBER", "rssi " + sb.toString());
+
+                //textView3.setText(sb.toString());
+                mqttRssi.publish("cyber/rssi", sb.toString());
+                Log.i("CYBER", sb.toString());
 //                Log.i("CYBER", "looping");
                 try {
                     Thread.sleep(90);
@@ -249,4 +228,29 @@ public class MainActivity extends AppCompatActivity {
             this.rssi = rssi;
         }
     }
+
+    class MqttRssi {
+
+        private Mqtt5BlockingClient client;
+
+        void connect() {
+            client = Mqtt5Client.builder()
+                    .identifier(UUID.randomUUID().toString())
+                    .serverHost("mqtt.flespi.io")
+                    .simpleAuth(Mqtt5SimpleAuth.builder().username("3s897csODyMGcSwQ75LY7uTipFBIBnzsDvrBvHfZ6Pt6xQMsLnhGH0PVvetUrQcU").build())
+                    .buildBlocking();
+
+            client.connect();
+
+        }
+
+        void publish(String queueName, String payload) {
+            client.publishWith()
+                    .topic(queueName)
+                    .qos(MqttQos.AT_LEAST_ONCE)
+                    .payload(payload.getBytes())
+                    .send();
+        }
+    }
 }
+
