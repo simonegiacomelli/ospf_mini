@@ -12,6 +12,9 @@ from gmqtt import Client as MQTTClient
 from simplerpcpy.distributed_conf import BrokerConfig
 from simplerpcpy.messaging import Client, Subscriber
 
+#.serverHost("mqtt.flespi.io")
+#.simpleAuth(Mqtt5SimpleAuth.builder().username("3s897csODyMGcSwQ75LY7uTipFBIBnzsDvrBvHfZ6Pt6xQMsLnhGH0PVvetUrQcU").build())
+
 
 class GmqttClient(Client):
     counter = 0
