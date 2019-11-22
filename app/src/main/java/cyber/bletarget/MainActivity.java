@@ -143,9 +143,16 @@ public class MainActivity extends AppCompatActivity {
     class BeaconManager {
 
         ArrayList<Beacon> beacons = new ArrayList<>();
-        List<String> addresses = Arrays.asList("d5:61:6b:fb:8d:e3",
-                "d6:82:a5:47:bf:ac",
-                "c5:7c:30:e4:a5:66");
+        String BEN = "d5:61:6b:fb:8d:e3";
+        String CARL = "d6:82:a5:47:bf:ac";
+        String DAVE = "c5:7c:30:e4:a5:66";
+        String FERRANTE = "f7:a2:7a:d2:40:1c";
+        String SIMO = "f3:4e:e8:df:11:bc";
+        List<String> addresses = Arrays.asList(FERRANTE, BEN, SIMO);
+        //"d5:61:6b:fb:8d:e3");
+//        ,
+//                "d6:82:a5:47:bf:ac",
+//                "c5:7c:30:e4:a5:66");
 
         void connectBeacons() {
             beacons.clear();
@@ -162,27 +169,44 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private void internalRun() {
+
+
             addresses.forEach(addr -> {
                 String address = addr.toUpperCase();
                 BluetoothDevice device = mBTAdapter.getRemoteDevice(address);
-                Beacon beacon = new Beacon(address, device);
+                Beacon beacon = new Beacon(addr);
                 BluetoothGatt gatt = device.connectGatt(getApplicationContext(), true, beacon);
                 beacon.gatt = gatt;
+                beacon.device = device;
                 beacons.add(beacon);
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(900);
                 } catch (InterruptedException e) {
 
                 }
 
             });
+            int index = 0;
+            long prev = System.currentTimeMillis();
             while (Thread.currentThread().isAlive()) {
-//                beacons.forEach(d -> {
-//                    d.gatt.readRemoteRssi();
-//                });
-                Log.i("CYBER", "looping");
+
+                long curr = System.currentTimeMillis();
+
+                index++;
+                if (index >= beacons.size())
+                    index = 0;
+
+                beacons.get(index).gatt.readRemoteRssi();
+                StringBuilder sb = new StringBuilder();
+                beacons.forEach(b -> {
+                    sb.append(b.rssi);
+                    sb.append(",");
+                });
+
+                Log.i("CYBER", "rssi " + sb.toString());
+//                Log.i("CYBER", "looping");
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(90);
                 } catch (InterruptedException e) {
 
                 }
@@ -195,17 +219,19 @@ public class MainActivity extends AppCompatActivity {
         private BluetoothDevice device;
         private BluetoothGatt gatt;
         long counter = 0;
+        int rssi = 0;
 
-        public Beacon(String address, BluetoothDevice device) {
+        public Beacon(String address) {
             this.address = address;
-            this.device = device;
+//            this.device = device;
         }
+
 
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             super.onConnectionStateChange(gatt, status, newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i("CYBER", gatt.getDevice().getAddress() + " " +address + " connected");
+                Log.i("CYBER", gatt.getDevice().getAddress() + " " + address + " connected");
 
                 gatt.readRemoteRssi();
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
@@ -217,9 +243,10 @@ public class MainActivity extends AppCompatActivity {
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             super.onReadRemoteRssi(gatt, rssi, status);
             counter++;
-            if (counter % 100 == 0)
-                Log.i("CYBER", gatt.getDevice().getAddress() + " " + this.gatt.getDevice().getAddress() + " " +address + " rssi " + rssi);
-            this.gatt.readRemoteRssi();
+//            if (counter % 100 == 0)
+            //Log.i("CYBER", gatt.getDevice().getAddress() + " " + this.gatt.getDevice().getAddress() + " " + address + " rssi " + rssi);
+//            this.gatt.readRemoteRssi();
+            this.rssi = rssi;
         }
     }
 }
