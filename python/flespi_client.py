@@ -5,21 +5,30 @@ import threading
 import time
 import uuid
 from threading import Thread
-from typing import Dict, Set
+from typing import Dict, Set, Callable
 
 from gmqtt import Client as MQTTClient
-
-from simplerpcpy.distributed_conf import BrokerConfig
-from simplerpcpy.messaging import Client, Subscriber
 
 #.serverHost("mqtt.flespi.io")
 #.simpleAuth(Mqtt5SimpleAuth.builder().username("3s897csODyMGcSwQ75LY7uTipFBIBnzsDvrBvHfZ6Pt6xQMsLnhGH0PVvetUrQcU").build())
 
+class BrokerConfig:
+    hostname = 'mqtt.flespi.io' 
+    username = '3s897csODyMGcSwQ75LY7uTipFBIBnzsDvrBvHfZ6Pt6xQMsLnhGH0PVvetUrQcU'
+    password = None
+    port = 1883
+    ssl = False
+    from gmqtt.mqtt.constants import MQTTv50
+    mqtt_version = MQTTv50
 
-class GmqttClient(Client):
+Subscriber = Callable[[str,str], None]
+
+class GmqttClient:
     counter = 0
 
-    def __init__(self, config: BrokerConfig):
+    def __init__(self, config: BrokerConfig = None):
+        if config == None:
+            config = BrokerConfig()
         self.config: BrokerConfig = config
         self.client = None
         self.thread = None
@@ -56,7 +65,7 @@ class GmqttClient(Client):
         self.all_listeners.pop(topic)
         self.active_listeners.discard(topic)
 
-    def connect(self) -> Client:
+    def connect(self):
         if self.client:
             return self
 
@@ -142,3 +151,24 @@ class GmqttClient(Client):
     def on_subscribe(self, client, mid, qos):
         # print('SUBSCRIBED')
         pass
+
+f = open('save-beacon-session.csv','w')
+
+def handle_rssi_message(topic,payload):
+    msg = payload.decode("utf-8")
+    f.write(f'{msg}\n')
+    f.flush()
+    print(msg)
+    timestamp = str(time.time()).split('.')
+    print(msg.split(',') + [timestamp[0]])
+
+
+def main():
+    client = GmqttClient()
+    client.connect()
+    client.subscribe('cyber/rssi', handle_rssi_message)
+    client.thread.join()
+
+
+if __name__ == "__main__":
+    main()

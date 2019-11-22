@@ -1,0 +1,39 @@
+<html>
+    <head>
+        <script type="text/javascript" src="paho-mqtt.js"></script>
+        <script type="text/javascript" src="main.js"></script>
+
+        <style>
+            #output {
+                overflow: auto;
+                max-height: 500px;
+                border: solid 1px black;
+            }
+            #myCanvas {
+                width: 200px;
+                height: 100px;
+                border: 1px solid black;
+            }
+        </style>
+
+    </head>
+
+    <body>
+        <div id="panel">
+            
+
+
+        </div>
+        <div id="room">
+            <canvas id="myCanvas">
+                    Your browser does not support the HTML5 canvas tag.
+            </canvas>
+        </div>
+
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+        <div id="output">
+        </div>
+    </body>
+
+</html>
