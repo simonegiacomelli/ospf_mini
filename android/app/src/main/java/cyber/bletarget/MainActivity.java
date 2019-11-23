@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothProfile;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -110,9 +111,9 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
-    BeaconManager beaconManager = new BeaconManager();
+    BeaconManager beaconManager = new BeaconManager(mBTAdapter, getApplicationContext());
 
-    class BeaconManager {
+    static class BeaconManager {
 
         ArrayList<Beacon> beacons = new ArrayList<>();
         String BEN = "d5:61:6b:fb:8d:e3";
@@ -121,6 +122,13 @@ public class MainActivity extends AppCompatActivity {
         String FERRANTE = "f7:a2:7a:d2:40:1c";
         String SIMO = "f3:4e:e8:df:11:bc";
         List<String> addresses = Arrays.asList(FERRANTE, BEN, SIMO);
+        private BluetoothAdapter mBTAdapter;
+        private Context applicationContext;
+
+        public BeaconManager(BluetoothAdapter mBTAdapter, Context applicationContext) {
+            this.mBTAdapter = mBTAdapter;
+            this.applicationContext = applicationContext;
+        }
         //"d5:61:6b:fb:8d:e3");
 //        ,
 //                "d6:82:a5:47:bf:ac",
@@ -149,7 +157,8 @@ public class MainActivity extends AppCompatActivity {
                 String address = addr.toUpperCase();
                 BluetoothDevice device = mBTAdapter.getRemoteDevice(address);
                 Beacon beacon = new Beacon(addr);
-                BluetoothGatt gatt = device.connectGatt(getApplicationContext(), true, beacon);
+
+                BluetoothGatt gatt = device.connectGatt(applicationContext, true, beacon);
                 beacon.gatt = gatt;
                 beacon.device = device;
                 beacons.add(beacon);
@@ -193,7 +202,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class Beacon extends BluetoothGattCallback {
+    static class Beacon extends BluetoothGattCallback {
         private String address;
         private BluetoothDevice device;
         private BluetoothGatt gatt;
@@ -229,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    class MqttRssi {
+    static class MqttRssi {
 
         private Mqtt5BlockingClient client;
 
