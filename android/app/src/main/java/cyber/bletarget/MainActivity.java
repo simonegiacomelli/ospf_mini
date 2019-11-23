@@ -41,7 +41,8 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
-    private BluetoothAdapter mBTAdapter;
+    BeaconManager beaconManager;
+
     TextView textView3;
 
     @Override
@@ -76,18 +77,12 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+        if (beaconManager == null)
+            beaconManager = new BeaconManager(this, getApplicationContext());
+
         beaconManager.connectBeacons();
-    }
-
-    private void setupBluetooth() {
-        mBTAdapter = BluetoothAdapter.getDefaultAdapter(); // get a handle on the bluetooth radio
-
-        // Ask for location permission if not already allowed
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
 
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -103,7 +98,6 @@ public class MainActivity extends AppCompatActivity {
                 || super.onSupportNavigateUp();
     }
 
-    BeaconManager beaconManager = new BeaconManager(mBTAdapter, getApplicationContext());
 
 }
 

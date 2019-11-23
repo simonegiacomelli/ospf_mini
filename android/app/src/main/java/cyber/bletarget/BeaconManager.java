@@ -1,10 +1,16 @@
 package cyber.bletarget;
 
+import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.util.Log;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,9 +28,10 @@ class BeaconManager {
     private BluetoothAdapter mBTAdapter;
     private Context applicationContext;
     private Thread thread;
+    private Activity activity;
 
-    public BeaconManager(BluetoothAdapter mBTAdapter, Context applicationContext) {
-        this.mBTAdapter = mBTAdapter;
+    public BeaconManager(Activity activity, Context applicationContext) {
+        this.activity = activity;
         this.applicationContext = applicationContext;
     }
     //"d5:61:6b:fb:8d:e3");
@@ -33,6 +40,12 @@ class BeaconManager {
 //                "c5:7c:30:e4:a5:66");
 
     synchronized void connectBeacons() {
+
+        mBTAdapter = BluetoothAdapter.getDefaultAdapter();
+        // Ask for location permission if not already allowed
+        if (ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
+
         if (thread != null)
             return;
 
