@@ -1,12 +1,11 @@
 const hostname = "mqtt.flespi.io"
 const port = 443
 const path = ""
-const clientId = "js-1"
+const clientId = "client_js-"
 const user = "3s897csODyMGcSwQ75LY7uTipFBIBnzsDvrBvHfZ6Pt6xQMsLnhGH0PVvetUrQcU"
 const num_messages = 5
-var client = new Paho.Client(hostname, Number(port), clientId);
+var client = new Paho.Client(hostname, Number(port), clientId + Math.floor(Math.random() * 100000));
 
-var messages = []
 function connect(){
     console.log("Init")
     console.log(client);
@@ -30,12 +29,9 @@ function connect(){
 }
 
 function onConnect(context) {
-    // Once a connection has been made, make a subscription and send a message.
     console.log("onConnect");
     client.subscribe("cyber/rssi");
-    // message = new Paho.MQTT.Message("Hello");
-    // message.destinationName = "World";
-    // client.send(message);
+    print_output("Connected");
 }
 
 // called when the client loses its connection
@@ -58,29 +54,17 @@ function onFail(context) {
 function disconnect() {
     console.log("INFO", "Disconnecting from Server.");
     client.disconnect();
+    print_output("Disconnected");
 }
 
 function handle_message(message){
-    
-    message = message.split(","); //parse_message(message);
-    // messages.push(message)
-    // if(messages.length > num_messages){
-    //     messages = moving_avg(num_messages, messages)
-    // }
-    
-    s = "A1:"+message[0] + "\t A2:"+message[1] + "\t A3:"+message[2] + "\t milliseconds:"+message[3]
+    message = message.split(","); 
     console.log(message)
-    document.getElementById('output').innerText += s + "\n";
-    document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
+    print_output(message)
 
 }
 
-// function parse_message(message){
-//     // console.log(message)
-//     return message.split(","); 
-// }
-
-// function moving_avg(num_messages, messages){
-//     messages = messages.slice(0, num_messages+1)
-//     return messages
-// }
+function print_output(data){
+    document.getElementById('output').innerText += data + "\n";
+    document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
+}
