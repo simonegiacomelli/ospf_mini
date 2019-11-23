@@ -6,8 +6,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothProfile;
-import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
@@ -37,13 +35,7 @@ import androidx.appcompat.widget.Toolbar;
 
 import android.view.Menu;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -113,153 +105,5 @@ public class MainActivity extends AppCompatActivity {
 
     BeaconManager beaconManager = new BeaconManager(mBTAdapter, getApplicationContext());
 
-    static class BeaconManager {
-
-        ArrayList<Beacon> beacons = new ArrayList<>();
-        String BEN = "d5:61:6b:fb:8d:e3";
-        String CARL = "d6:82:a5:47:bf:ac";
-        String DAVE = "c5:7c:30:e4:a5:66";
-        String FERRANTE = "f7:a2:7a:d2:40:1c";
-        String SIMO = "f3:4e:e8:df:11:bc";
-        List<String> addresses = Arrays.asList(FERRANTE, BEN, SIMO);
-        private BluetoothAdapter mBTAdapter;
-        private Context applicationContext;
-
-        public BeaconManager(BluetoothAdapter mBTAdapter, Context applicationContext) {
-            this.mBTAdapter = mBTAdapter;
-            this.applicationContext = applicationContext;
-        }
-        //"d5:61:6b:fb:8d:e3");
-//        ,
-//                "d6:82:a5:47:bf:ac",
-//                "c5:7c:30:e4:a5:66");
-
-        void connectBeacons() {
-            beacons.clear();
-            // Spawn a new thread to avoid blocking the GUI one
-
-            Thread t = new Thread() {
-                public void run() {
-                    internalRun();
-
-                }
-            };
-            t.setDaemon(true);
-            t.start();
-        }
-
-        MqttRssi mqttRssi = new MqttRssi();
-
-        private void internalRun() {
-            mqttRssi.connect();
-
-            addresses.forEach(addr -> {
-                String address = addr.toUpperCase();
-                BluetoothDevice device = mBTAdapter.getRemoteDevice(address);
-                Beacon beacon = new Beacon(addr);
-
-                BluetoothGatt gatt = device.connectGatt(applicationContext, true, beacon);
-                beacon.gatt = gatt;
-                beacon.device = device;
-                beacons.add(beacon);
-                try {
-                    Thread.sleep(900);
-                } catch (InterruptedException e) {
-
-                }
-
-            });
-            int index = 0;
-            long counter = 0;
-            long prev = System.currentTimeMillis();
-            while (Thread.currentThread().isAlive()) {
-                counter++;
-                long curr = System.currentTimeMillis();
-
-                index++;
-                if (index >= beacons.size())
-                    index = 0;
-
-                beacons.get(index).gatt.readRemoteRssi();
-                StringBuilder sb = new StringBuilder();
-                for (Beacon b : beacons) {
-                    sb.append(b.rssi);
-                    sb.append(",");
-                }
-                sb.append(counter);
-
-
-                //textView3.setText(sb.toString());
-                mqttRssi.publish("cyber/rssi", sb.toString());
-                Log.i("CYBER", sb.toString());
-//                Log.i("CYBER", "looping");
-                try {
-                    Thread.sleep(90);
-                } catch (InterruptedException e) {
-
-                }
-            }
-        }
-    }
-
-    static class Beacon extends BluetoothGattCallback {
-        private String address;
-        private BluetoothDevice device;
-        private BluetoothGatt gatt;
-        long counter = 0;
-        int rssi = 0;
-
-        public Beacon(String address) {
-            this.address = address;
-//            this.device = device;
-        }
-
-
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            super.onConnectionStateChange(gatt, status, newState);
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i("CYBER", gatt.getDevice().getAddress() + " " + address + " connected");
-
-                gatt.readRemoteRssi();
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.i("CYBER", address + " disconnected");
-            }
-        }
-
-        @Override
-        public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-            super.onReadRemoteRssi(gatt, rssi, status);
-            counter++;
-//            if (counter % 100 == 0)
-            //Log.i("CYBER", gatt.getDevice().getAddress() + " " + this.gatt.getDevice().getAddress() + " " + address + " rssi " + rssi);
-//            this.gatt.readRemoteRssi();
-            this.rssi = rssi;
-        }
-    }
-
-    static class MqttRssi {
-
-        private Mqtt5BlockingClient client;
-
-        void connect() {
-            client = Mqtt5Client.builder()
-                    .identifier(UUID.randomUUID().toString())
-                    .serverHost("mqtt.flespi.io")
-                    .simpleAuth(Mqtt5SimpleAuth.builder().username("3s897csODyMGcSwQ75LY7uTipFBIBnzsDvrBvHfZ6Pt6xQMsLnhGH0PVvetUrQcU").build())
-                    .buildBlocking();
-
-            client.connect();
-
-        }
-
-        void publish(String queueName, String payload) {
-            client.publishWith()
-                    .topic(queueName)
-                    .qos(MqttQos.AT_LEAST_ONCE)
-                    .payload(payload.getBytes())
-                    .send();
-        }
-    }
 }
 
