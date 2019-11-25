@@ -14,6 +14,7 @@
     </style>
 </head>
 <body>
+This is the recordig done in openspace that loops continuously .
 <canvas></canvas>
 <div id="logdiv"></div>
 <script>
@@ -79,10 +80,14 @@
     }
 
     class Beacon {
-        constructor(ctx, color) {
+        constructor(ctx, color, coords) {
             this.ctx = ctx;
             this.x = 0;
             this.y = 0;
+            if (coords !== undefined) {
+                this.x = coords[0];
+                this.y = coords[1];
+            }
             this.radius = 100;
             this.color = color;
         }
@@ -100,9 +105,34 @@
         }
     }
 
-    function run(csv) {
+    class Csv {
+        constructor(content) {
+            this.t = 0;
+            this.lines = content.split('\n');
+            this.n = this.lines.length;
+            this.rows = Array(this.n);
+            for (let i = 0; i < this.n; i++) {
+                let line = this.lines[i];
+                let vals = line.split(',').map(n => Math.abs(parseFloat(n)));
+                this.rows[i] = vals;
+            }
+        }
+
+        next() {
+            this.t++;
+            if (this.t >= this.n)
+                this.t = 0;
+        }
+
+        get(idx) {
+            return this.rows[this.t][idx];
+        }
+    }
+
+    function run(content) {
+        let csv = new Csv(content);
         let hotkey = new Hotkey(window);
-        // hotkey.enableDebug();
+        hotkey.enableDebug();
 
         let canvas = document.querySelector('canvas');
         let logdiv = document.getElementById('logdiv');
@@ -116,14 +146,17 @@
 
         let ctx = canvas.getContext('2d');
 
+        let coords = [[87, 235], [231, 236], [147, 118]];
         let colors = ['red', 'green', 'blue'];
         let beacons = Array(3);
 
         var selectedBeacon = undefined;
         for (i = 0; i < beacons.length; i++) {
             let idx = i + 1;
-            beacons[i] = new Beacon(ctx, colors[i]);
-            hotkey.add("Digit" + idx, () => {
+            let color = colors[i];
+            let b = new Beacon(ctx, color, coords[i]);
+            beacons[i] = b;
+            hotkey.add("Key" + color[0], () => {
                 console.log('Selected beacon ' + idx);
                 selectedBeacon = beacons[idx - 1];
             });
@@ -131,6 +164,7 @@
 
         canvas.addEventListener('click', (e) => {
             if (selectedBeacon !== undefined) {
+                console.log(`Moving ${selectedBeacon.color} to (${e.clientX},${e.clientY})`);
                 selectedBeacon.x = e.clientX;
                 selectedBeacon.y = e.clientY;
                 selectedBeacon = undefined;
@@ -139,18 +173,24 @@
 
         function loop(time) {  // microsecond timer 1/1,000,000 accuracy in ms 1/1000th
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            beacons.forEach(b => b.paint());
+            csv.next();
+            beacons.forEach((b, idx) => {
+                b.radius = csv.get(idx);
+                b.paint();
+            });
+
             requestAnimationFrame(loop);
         }
 
         requestAnimationFrame(loop);
 
         hotkey.add('t', () => {
-            console.log('okkkkk');
+
+
         })
     }
 
-    let csv = `-54.09,-73.9,-71.77000000000001
+    let content = `-54.09,-73.9,-71.77000000000001
 -53.879999999999995,-73.99,-71.87
 -53.769999999999996,-74.06,-71.89000000000001
 -53.61,-74.17,-71.89000000000001
@@ -1210,7 +1250,7 @@
 -71.28,-73.60000000000001,-55.82
 `;
 
-    run(csv);
+    run(content);
 </script>
 </body>
 </html>
