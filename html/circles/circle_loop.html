@@ -14,8 +14,8 @@
     </style>
 </head>
 <body>
-<div id="logdiv"></div>
 <canvas></canvas>
+<div id="logdiv"></div>
 <script>
 
     function bind(caller) {
@@ -95,7 +95,7 @@
             this.ctx.fillStyle = this.color;
             // this.ctx.fill();
             this.ctx.lineWidth = 5;
-            this.ctx.strokeStyle = '#003300';
+            this.ctx.strokeStyle = this.color;
             this.ctx.stroke();
         }
     }
@@ -123,8 +123,8 @@
             let idx = i + 1;
             beacons[i] = new Beacon(ctx, colors[i]);
             hotkey.add("Digit" + idx, () => {
-                log('Selected beacon ' + idx);
-                selectedBeacon = beacons[idx];
+                console.log('Selected beacon ' + idx);
+                selectedBeacon = beacons[idx - 1];
             });
         }
 
