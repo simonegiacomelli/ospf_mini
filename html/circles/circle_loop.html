@@ -166,7 +166,6 @@
 
         canvas.addEventListener('click', (e) => {
             if (selectedBeacon !== undefined) {
-                let pos = findPos(this);
                 let x = e.offsetX;
                 let y = e.offsetY;
                 console.log(`Moving ${selectedBeacon.color} to (${x},${y})`);
