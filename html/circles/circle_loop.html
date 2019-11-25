@@ -118,7 +118,8 @@
 
         let colors = ['red', 'green', 'blue'];
         let beacons = Array(3);
-        var selectedBeacon = beacons[0];
+
+        var selectedBeacon = undefined;
         for (i = 0; i < beacons.length; i++) {
             let idx = i + 1;
             beacons[i] = new Beacon(ctx, colors[i]);
@@ -129,8 +130,11 @@
         }
 
         canvas.addEventListener('click', (e) => {
-            selectedBeacon.x = e.clientX;
-            selectedBeacon.y = e.clientY;
+            if (selectedBeacon !== undefined) {
+                selectedBeacon.x = e.clientX;
+                selectedBeacon.y = e.clientY;
+                selectedBeacon = undefined;
+            }
         });
 
         function loop(time) {  // microsecond timer 1/1,000,000 accuracy in ms 1/1000th
@@ -141,6 +145,9 @@
 
         requestAnimationFrame(loop);
 
+        hotkey.add('t', () => {
+            console.log('okkkkk');
+        })
     }
 
     let csv = `-54.09,-73.9,-71.77000000000001
