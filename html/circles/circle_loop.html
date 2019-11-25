@@ -38,7 +38,7 @@
         }
 
         add(hotkey, callback) {
-            this.handlers[hotkey] = callback;
+            this.handlers[hotkey.toUpperCase()] = callback;
             return this;
         }
 
@@ -58,17 +58,16 @@
             if (ke.altKey) res += "ALT-";
             if (ke.metaKey) res += "META-";
 
-            let hotkey2 = res + ke.code;
-            let hotkey1 = res + ke.key;
+            let hotkey1 = res + ke.code;
+            let hotkey2 = res + ke.key;
 
             if (this.debug)
-                console.log('hotkey recognized formats:', hotkey1, hotkey2);
+                console.log('hotkey recognize this two formats:', hotkey1, hotkey2);
 
-
-            return;
-            // if (!handlers.containsKey(keh.key)) return
-            // val res = handlers[keh.key]!!
-            //     res()
+            let h = this.handlers[hotkey1.toUpperCase()];
+            if (h === undefined) h = this.handlers[hotkey2.toUpperCase()];
+            if (h === undefined) return;
+            h();
             ke.preventDefault();
             ke.stopPropagation();
         }
@@ -103,8 +102,8 @@
 
     function run(csv) {
         let hotkey = new Hotkey(window);
-        hotkey.enableDebug();
-        hotkey.add("CTRL-SHIFT-")
+        // hotkey.enableDebug();
+
         let canvas = document.querySelector('canvas');
         let logdiv = document.getElementById('logdiv');
 
@@ -119,21 +118,24 @@
 
         let colors = ['red', 'green', 'blue'];
         let beacons = Array(3);
-
+        var selectedBeacon = beacons[0];
         for (i = 0; i < beacons.length; i++) {
+            let idx = i + 1;
             beacons[i] = new Beacon(ctx, colors[i]);
+            hotkey.add("Digit" + idx, () => {
+                log('Selected beacon ' + idx);
+                selectedBeacon = beacons[idx];
+            });
         }
-        let c1 = beacons[0];
+
         canvas.addEventListener('click', (e) => {
-            c1.x = e.clientX;
-            c1.y = e.clientY;
+            selectedBeacon.x = e.clientX;
+            selectedBeacon.y = e.clientY;
         });
 
         function loop(time) {  // microsecond timer 1/1,000,000 accuracy in ms 1/1000th
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            //c1.paint();
-            // c1.radius += 1;
-            c1.paint();
+            beacons.forEach(b => b.paint());
             requestAnimationFrame(loop);
         }
 
