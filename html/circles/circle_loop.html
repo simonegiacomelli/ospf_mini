@@ -39,6 +39,8 @@
         }
 
         add(hotkey, callback) {
+            if (this.debug)
+                console.log(`Registering hotkey ${hotkey}`);
             this.handlers[hotkey.toUpperCase()] = callback;
             return this;
         }
@@ -164,9 +166,12 @@
 
         canvas.addEventListener('click', (e) => {
             if (selectedBeacon !== undefined) {
-                console.log(`Moving ${selectedBeacon.color} to (${e.clientX},${e.clientY})`);
-                selectedBeacon.x = e.clientX;
-                selectedBeacon.y = e.clientY;
+                let pos = findPos(this);
+                let x = e.offsetX;
+                let y = e.offsetY;
+                console.log(`Moving ${selectedBeacon.color} to (${x},${y})`);
+                selectedBeacon.x = x;
+                selectedBeacon.y = y;
                 selectedBeacon = undefined;
             }
         });
