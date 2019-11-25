@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<canvas></canvas>
+<script>
+    var canvas = document.querySelector('canvas');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    var c = canvas.getContext('2d');
+    var progress = 0;
+
+    function up() {
+        console.log('up');
+        c.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        c.beginPath();
+        progress += 3;
+        c.arc(300, 300 - progress, 50, 0, 2 * Math.PI, false);
+        c.stroke();
+        if (progress < 100) {
+            window.requestAnimationFrame(up);
+        } else {
+            progress = 0;
+            console.log('last up');
+            window.requestAnimationFrame(right);
+        }
+    }
+
+    function right() {
+        console.log('right');
+        c.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        c.beginPath();
+        progress += 3;
+        c.arc(300 + progress, 200, 50, 0, 2 * Math.PI, false);
+        c.stroke();
+        if (progress < 100) {
+            window.requestAnimationFrame(right);
+        } else {
+            progress = 0;
+            console.log('last right');
+            window.requestAnimationFrame(down);
+        }
+    }
+
+    function down() {
+        console.log('down');
+        c.clearRect(0, 0, window.innerWidth, window.innerHeight);
+        c.beginPath();
+        progress += 3;
+        c.arc(400, 200 + progress, 50, 0, 2 * Math.PI, false);
+        c.stroke();
+        if (progress < 100) {
+            window.requestAnimationFrame(down);
+        } else {
+            progress = 0;
+            console.log('last down');
+        }
+    }
+
+    window.requestAnimationFrame(up);
+</script>
+</body>
+</html>
