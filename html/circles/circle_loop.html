@@ -17,22 +17,94 @@
 <div id="logdiv"></div>
 <canvas></canvas>
 <script>
-    class Circle {
-        constructor(ctx) {
+
+    function bind(caller) {
+        for (const key of Object.getOwnPropertyNames(caller.constructor.prototype)) {
+            const value = caller[key];
+
+            if (key !== 'constructor' && typeof value === 'function')
+                caller[key] = value.bind(caller);
+        }
+    }
+
+    class Hotkey {
+        //element can be window for global hotkeys
+        constructor(element) {
+            this.element = element
+            this.handlers = {};
+            this.debug = false;
+            bind(this);
+            element.addEventListener("keydown", this.handler, false);
+        }
+
+        add(hotkey, callback) {
+            this.handlers[hotkey] = callback;
+            return this;
+        }
+
+        handler(ke) {
+            if (!ke instanceof KeyboardEvent) return;
+            let key = ke.key;
+            if (key === 'Shift') return;
+            if (key === 'Control') return;
+            if (key === 'Alt') return;
+            if (key === 'Meta') return;
+            // val keh = KeyboardEventHelper(ke)
+
+            // if (!keh.allowed) return
+            let res = "";
+            if (ke.ctrlKey) res += "CONTROL-";
+            if (ke.shiftKey) res += "SHIFT-";
+            if (ke.altKey) res += "ALT-";
+            if (ke.metaKey) res += "META-";
+
+            let hotkey2 = res + ke.code;
+            let hotkey1 = res + ke.key;
+
+            if (this.debug)
+                console.log('hotkey recognized formats:', hotkey1, hotkey2);
+
+
+            return;
+            // if (!handlers.containsKey(keh.key)) return
+            // val res = handlers[keh.key]!!
+            //     res()
+            ke.preventDefault();
+            ke.stopPropagation();
+        }
+
+        enableDebug() {
+            this.debug = true;
+            return this;
+        }
+    }
+
+    class Beacon {
+        constructor(ctx, color) {
             this.ctx = ctx;
             this.x = 0;
             this.y = 0;
             this.radius = 100;
+            this.color = color;
         }
 
         paint() {
             this.ctx.beginPath();
             this.ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+            // this.ctx.stroke();
+
+            this.ctx.fillStyle = this.color;
+            // this.ctx.fill();
+            this.ctx.lineWidth = 5;
+            this.ctx.strokeStyle = '#003300';
             this.ctx.stroke();
         }
     }
 
     function run(csv) {
+        let hotkey = new Hotkey(window);
+        hotkey.enableDebug();
+        hotkey.add("CTRL-SHIFT-")
         let canvas = document.querySelector('canvas');
         let logdiv = document.getElementById('logdiv');
 
@@ -43,27 +115,30 @@
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight - 100;
 
-        var ctx = canvas.getContext('2d');
-        var progress = 0;
+        let ctx = canvas.getContext('2d');
 
-        let c1 = new Circle(ctx);
+        let colors = ['red', 'green', 'blue'];
+        let beacons = Array(3);
 
+        for (i = 0; i < beacons.length; i++) {
+            beacons[i] = new Beacon(ctx, colors[i]);
+        }
+        let c1 = beacons[0];
         canvas.addEventListener('click', (e) => {
-            // debugger;
-            // log('canvas click');
             c1.x = e.clientX;
             c1.y = e.clientY;
         });
 
         function loop(time) {  // microsecond timer 1/1,000,000 accuracy in ms 1/1000th
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            c1.paint();
+            //c1.paint();
             // c1.radius += 1;
-
+            c1.paint();
             requestAnimationFrame(loop);
         }
 
         requestAnimationFrame(loop);
+
     }
 
     let csv = `-54.09,-73.9,-71.77000000000001
