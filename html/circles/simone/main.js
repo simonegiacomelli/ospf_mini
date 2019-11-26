@@ -1,70 +1,89 @@
-const hostname = "mqtt.flespi.io"
-const port = 443
-const path = ""
-const clientId = "client_js-"
-const user = "3s897csODyMGcSwQ75LY7uTipFBIBnzsDvrBvHfZ6Pt6xQMsLnhGH0PVvetUrQcU"
-const num_messages = 5
-var client = new Paho.Client(hostname, Number(port), clientId + Math.floor(Math.random() * 100000));
+let defaultConf = {
+    hostname: "mqtt.flespi.io",
+    port: 443,
+    path: "",
+    clientId: "client_js-" + Math.floor(Math.random() * 100000),
+    user: "3s897csODyMGcSwQ75LY7uTipFBIBnzsDvrBvHfZ6Pt6xQMsLnhGH0PVvetUrQcU",
+    pass: "",
+    num_messages: 5
+};
 
-function connect(){
-    console.log("Init")
-    console.log(client);
-
-    client.onMessageArrived = onMessageArrived;
-    client.onConnectionLost = onConnectionLost;
-
-    var options = {
-        // invocationContext: { host: hostname, port: port, path: client.path, clientId: clientId },
-        timeout: 3,
-        // keepAliveInterval: 60,
-        // cleanSession: cleanSession,
-        useSSL: true,
-        reconnect: true,
-        onSuccess: onConnect,
-        userName: user,
-        onFailure: onFail
-      };
-
-    client.connect(options);
-}
-
-function onConnect(context) {
-    console.log("onConnect");
-    client.subscribe("cyber/rssi");
-    print_output("Connected");
-}
-
-// called when the client loses its connection
-function onConnectionLost(responseObject) {
-    if (responseObject.errorCode !== 0) {
-        console.log("onConnectionLost:"+responseObject.errorMessage);
+class MqttClient {
+    constructor(conf) {
+        bind(this);
+        if (conf === undefined)
+            conf = defaultConf;
+        this.conf = conf;
+        this.client = new Paho.Client(conf.hostname, Number(conf.port), conf.clientId);
     }
-}
 
-// called when a message arrives
-function onMessageArrived(message) {
-    console.log("onMessageArrived:"+message.payloadString);
-    handle_message(message.payloadString )
-}
+    bind(caller) {
+        for (const key of Object.getOwnPropertyNames(caller.constructor.prototype)) {
+            const value = caller[key];
 
-function onFail(context) {
-    console.log("onFail");
-}
+            if (key !== 'constructor' && typeof value === 'function')
+                caller[key] = value.bind(caller);
+        }
+    }
 
-function disconnect() {
-    console.log("INFO", "Disconnecting from Server.");
-    client.disconnect();
-    print_output("Disconnected");
-}
+    connect() {
+        console.log("Init")
 
-function handle_message(message){
-    message = message.split(","); 
-    console.log(message)
-    print_output(message)
+        this.client.onMessageArrived = this.onMessageArrived;
+        this.client.onConnectionLost = this.onConnectionLost;
 
-}
+        let options = {
+            // invocationContext: { host: hostname, port: port, path: client.path, clientId: clientId },
+            timeout: 3,
+            // keepAliveInterval: 60,
+            // cleanSession: cleanSession,
+            useSSL: true,
+            reconnect: true,
+            onSuccess: this.onConnect,
+            userName: this.conf.user,
+            password: this.conf.pass,
+            onFailure: this.onFail
+        };
 
-function print_output(data){
-    document.getElementById('output').innerText += data + "\n";
-    document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
+        this.client.connect(options);
+    }
+
+    onConnect(context) {
+        console.log("onConnect");
+        this.client.subscribe("cyber/rssi");
+        print_output("Connected");
+    }
+
+    onConnectionLost(responseObject) {
+        if (responseObject.errorCode !== 0) {
+            console.log("onConnectionLost:" + responseObject.errorMessage);
+        }
+    }
+
+    onMessageArrived(message) {
+        console.log("onMessageArrived:" + message.payloadString);
+        handle_message(message.payloadString)
+    }
+
+    onFail(context) {
+        console.log("onFail");
+    }
+
+    disconnect() {
+        console.log("INFO", "Disconnecting from Server.");
+        this.client.disconnect();
+        print_output("Disconnected");
+    }
+
+    handle_message(message) {
+        message = message.split(",");
+        console.log(message)
+        print_output(message)
+
+    }
+
+    print_output(data) {
+        document.getElementById('output').innerText += data + "\n";
+        document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
+    }
 }

@@ -25,15 +25,15 @@
 </head>
 <body>
 <h1>This is the recordig done in openspace that loops continuously .</h1>
-<button onclick="connect()">Connect</button>
-<button onclick="disconnect()">Disconnect</button>
+<button onclick="mqtt.connect()">Connect</button>
+<button onclick="mqtt.disconnect()">Disconnect</button>
 
 <canvas></canvas>
 <div id="logdiv"></div>
 <div id="output"></div>
 <script>
 
-
+    mqtt = new MqttClient();
     class Beacon {
         constructor(ctx, color, coords) {
             this.ctx = ctx;
@@ -144,7 +144,8 @@
         hotkey.add('t', () => {
 
 
-        })
+        });
+        mqtt.connect();
     }
 
     let content = `-54.09,-73.9,-71.77000000000001
