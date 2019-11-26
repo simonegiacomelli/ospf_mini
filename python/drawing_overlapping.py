@@ -61,6 +61,8 @@ def get_position(bases, radii):
         y, x = 0, 0
 
     x, y = int(x), int(y)
+    # Color Map is BGR instead of RGB in OpenCV
+    # x is number of columns and y is number of rows, it is different from 2d matrix in python.
     cv2.circle(img,(x, y), 5, (0,255,255), -1)
 
     cv2.circle(img,(x1, y1), 5, (255,0,0), -1)
@@ -71,10 +73,13 @@ def get_position(bases, radii):
     cv2.line(img, (x2, y2), (x3, y3), (0,0,0), 2)
     cv2.line(img, (x1, y1), (x3, y3), (0,0,0), 2)
     cv2.imwrite("map.jpg", img)
-    return x, y
+    return x, y, np.sum(mask123==255)
 
 if __name__== "__main__":
+    #bases are coordinates of three bases (x,y)
     bases = np.array([[500, 600],[1000, 600],[800, 1200]])
+    #radius of each base
     radii = np.array([400,400,400])
-    x, y = get_position(bases, radii)
-    print(x,y)
+    x, y, num_pixels = get_position(bases, radii)
+    print("Centriod coordinates: x, y, number of pixels inside overlapping area:")
+    print(x,y, num_pixels)
