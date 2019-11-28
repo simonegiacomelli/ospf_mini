@@ -8,12 +8,7 @@
 #include "../../src/BLEService.h"
 
 #endif
-#define LEN 4
-
-//class BLECustomCharacteristic : public BLETypedCharacteristic<char[LEN]> {
-//public:
-//    BLECustomCharacteristic(const char *uuid, unsigned char properties);
-//};
+#define MAX_LEN 4
 
 
 // BLE Battery Service
@@ -21,18 +16,20 @@ BLEService batteryService("180F");
 //BLEService batteryService("1234");
 // BLE Battery Level Characteristic
 BLECharacteristic batteryLevelChar("2A19",  // standard 16-bit characteristic UUID
-                                         BLEWrite |
-                                         BLERead |
-                                         BLENotify,LEN,false); // remote clients will be able to get notifications if this characteristic changes
+                                   BLEWrite |
+                                   BLERead |
+                                   BLENotify, MAX_LEN,
+                                   false); // remote clients will be able to get notifications if this characteristic changes
 
-char buffer[LEN];
-void *value;
+
+char buffer[MAX_LEN];
+
 char counter = 0;  // last battery level reading from analog input
 long previousMillis = 0;  // last time the battery level was checked, in ms
 AntiSpin ap_loop(2000);
 
 void setup() {
-    value = buffer;
+
     ap_loop.setOnExecuteLambda([]() {
         printf("Main loop executing\n");
     });
@@ -58,7 +55,6 @@ void setup() {
     BLE.setAdvertisedService(batteryService); // add the service UUID
     batteryService.addCharacteristic(batteryLevelChar); // add the battery level characteristic
     BLE.addService(batteryService); // Add the battery service
-    //batteryLevelChar.writeValue(counter); // set initial value for this characteristic
 
     //BLE.setAdvertisedServiceUuid("12340000-E8F2-537E-4F6C-D104768A1214");
 
@@ -89,7 +85,7 @@ void loop() {
                 Serial.print("Connected to central: ");
                 Serial.print(central.address());
                 Serial.print(" sending value: ");
-                for (int idx = 0; idx < LEN; idx++) {
+                for (int idx = 0; idx < 4; idx++) {
                     char val = counter;
                     Serial.print(val);
                     Serial.print(" ");
@@ -97,7 +93,7 @@ void loop() {
                     buffer[idx] = val;
                 }
 //                batteryLevelChar.writeValue(next,4);
-                batteryLevelChar.writeValue(value,4);
+                batteryLevelChar.writeValue((char*)buffer, 4);
                 Serial.println(". Value sent");
             }
 
