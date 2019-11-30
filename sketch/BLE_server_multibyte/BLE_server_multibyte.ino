@@ -80,20 +80,19 @@ void loop() {
         if (central.connected()) {
             long currentMillis = millis();
             // if x ms have passed, check the battery level:
-            if (currentMillis - previousMillis >= 3000) {
+            if (currentMillis - previousMillis >= 500) {
                 previousMillis = currentMillis;
                 Serial.print("Connected to central: ");
                 Serial.print(central.address());
                 Serial.print(" sending value: ");
-                for (int idx = 0; idx < 4; idx++) {
+                for (int idx = 0; idx < MAX_LEN; idx++) {
                     char val = counter;
                     Serial.print(val);
                     Serial.print(" ");
-                    counter++;
                     buffer[idx] = val;
+                    counter++;
                 }
-//                batteryLevelChar.writeValue(next,4);
-                batteryLevelChar.writeValue((char*)buffer, 4);
+                batteryLevelChar.writeValue((char*)buffer, MAX_LEN);
                 Serial.println(". Value sent");
             }
 
