@@ -11,6 +11,9 @@ let defaultConf = {
 class MqttClient {
     constructor(conf) {
         bind(this);
+        this.onConnected = 0;
+        this.onMessage = 0;
+
         if (conf === undefined)
             conf = defaultConf;
         this.conf = conf;
@@ -51,7 +54,8 @@ class MqttClient {
     onConnect(context) {
         console.log("onConnect");
         this.client.subscribe("cyber/rssi");
-        print_output("Connected");
+        if (this.onConnected !== 0)
+            this.onConnected();
     }
 
     onConnectionLost(responseObject) {
@@ -61,8 +65,11 @@ class MqttClient {
     }
 
     onMessageArrived(message) {
-        console.log("onMessageArrived:" + message.payloadString);
-        handle_message(message.payloadString)
+
+        if (this.onMessage !== 0)
+            this.onMessage(message.topic, message.payloadString);
+        else
+            console.log("onMessageArrived:" + message.payloadString);
     }
 
     onFail(context) {
@@ -72,18 +79,6 @@ class MqttClient {
     disconnect() {
         console.log("INFO", "Disconnecting from Server.");
         this.client.disconnect();
-        print_output("Disconnected");
     }
 
-    handle_message(message) {
-        message = message.split(",");
-        console.log(message)
-        print_output(message)
-
-    }
-
-    print_output(data) {
-        document.getElementById('output').innerText += data + "\n";
-        document.getElementById('output').scrollTop = document.getElementById('output').scrollHeight;
-    }
 }

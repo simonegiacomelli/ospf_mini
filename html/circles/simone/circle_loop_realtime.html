@@ -33,7 +33,7 @@
 <div id="output"></div>
 <script>
 
-    mqtt = new MqttClient();
+
     class Beacon {
         constructor(ctx, color, coords) {
             this.ctx = ctx;
@@ -132,7 +132,7 @@
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
             csv.next();
             beacons.forEach((b, idx) => {
-                b.radius = csv.get(idx);
+                // b.radius = csv.get(idx);
                 b.paint();
             });
 
@@ -145,7 +145,20 @@
 
 
         });
+
+        mqtt = new MqttClient();
+        mqtt.onConnected = () => {
+            mqtt.client.subscribe("cyber/rssi");
+        };
+        mqtt.onMessage = (topic, payload) => {
+            let vals = payload.split(',').slice(0, 3).map(n => Math.abs(parseFloat(n)));
+            console.log(vals);
+            for (i = 0; i < beacons.length; i++) {
+               beacons[i].radius = vals[i];
+            }
+        };
         mqtt.connect();
+
     }
 
     let content = `-54.09,-73.9,-71.77000000000001
