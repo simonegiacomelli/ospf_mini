@@ -46,6 +46,7 @@
             }
             this.radius = 100;
             this.color = color;
+            this.fill = false;
         }
 
         paint() {
@@ -54,12 +55,14 @@
             // this.ctx.stroke();
 
             this.ctx.fillStyle = this.color;
-            // this.ctx.fill();
+            if (this.fill)
+                this.ctx.fill();
             this.ctx.lineWidth = 5;
             this.ctx.strokeStyle = this.color;
+
             this.ctx.stroke();
 
-            this.ctx.fillStyle = this.color;
+            this.ctx.fillStyle = "black";
             this.ctx.font = "bold 16px Arial";
             this.ctx.fillText(this.label, this.x, this.y);
         }
@@ -139,6 +142,7 @@
         let names = ['BEN', 'CARL', 'DAVE']
         let beacons = Array(3);
 
+
         var selectedBeacon = undefined;
         for (i = 0; i < beacons.length; i++) {
             let idx = i + 1;
@@ -151,6 +155,20 @@
                 console.log('Selected beacon ' + idx);
                 selectedBeacon = beacons[idx - 1];
             });
+        }
+
+        function closerBeaconIdx() {
+            let m = 1000;
+            let res = 0;
+            for (let i = 0; i < beacons.length; i++) {
+                let beacon = beacons[i];
+                if (m > beacon.values.average) {
+                    m = beacon.values.average;
+                    res = i;
+                }
+
+            }
+            return res;
         }
 
         canvas.addEventListener('click', (e) => {
@@ -168,8 +186,10 @@
         function loop(time) {  // microsecond timer 1/1,000,000 accuracy in ms 1/1000th
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
             csv.next();
+            let closerIdx = closerBeaconIdx();
             beacons.forEach((b, idx) => {
                 // b.radius = csv.get(idx);
+                b.circle.fill = closerIdx === idx;
                 b.circle.paint();
             });
 
