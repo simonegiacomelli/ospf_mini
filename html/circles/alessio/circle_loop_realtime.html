@@ -37,6 +37,9 @@
 <div id="output"></div>
 <script>
 
+    function millis() {
+        return Date.now();
+    }
 
     class Circle {
         constructor(ctx, color, coords) {
@@ -108,17 +111,15 @@
 
             this.ctx.fillStyle = "black";
             this.ctx.font = "bold 16px Arial";
-            this.ctx.fillText(this.label, this.x, this.y+20);
+            this.ctx.fillText(this.label, this.x + 20, this.y + 20);
 
         }
     }
 
     class MovingAverage {
         constructor(windowSize) {
-            this.list = new Array();
+            this.clear();
             this.windowSize = windowSize;
-            this.sum = 0;
-            this.average = 0;
         }
 
         add(value) {
@@ -130,13 +131,39 @@
             }
             this.average = this.sum / this.list.length;
         }
+
+        clear() {
+            this.list = [];
+            this.sum = 0;
+            this.average = 0;
+        }
     }
 
     class Beacon {
         constructor(shape, averageWindow, name) {
             this.shape = shape
-            this.values = new MovingAverage(averageWindow);
+            this._ma = new MovingAverage(averageWindow);
             this.name = name;
+            this.lastReading = 0;
+        }
+
+        add(value) {
+            if (this.isOld())
+                this._ma.clear();
+            this._ma.add(value);
+            this.lastReading = millis();
+        }
+
+        avg() {
+            if (this.isOld()) return 1000;
+            if (this._ma.list.length === 0) return 1000;
+            return this._ma.average;
+        }
+
+        isOld() {
+            let millis1 = millis();
+            let number = millis1 - this.lastReading;
+            return number > 3000;
         }
     }
 
@@ -221,10 +248,10 @@
             let res = undefined;
 
             Object.keys(beacons).forEach(function (key) {
-                let beacon = beacons[key];
-                if (m > beacon.values.average) {
-                    m = beacon.values.average;
-                    res = beacon;
+                let b = beacons[key];
+                if (!b.isOld() && m > b.avg()) {
+                    m = b.avg();
+                    res = b;
                 }
             });
 
@@ -246,14 +273,12 @@
         function loop(time) {  // microsecond timer 1/1,000,000 accuracy in ms 1/1000th
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
             let beacon = closerBeacon();
-            if (beacon !== undefined )
-                Object.keys(beacons).forEach(function (key) {
-                    let b = beacons[key];
-                    b.shape.fill = b === beacon;
-
-                    b.shape.label = `${b.name} ${Math.round(beacon.values.average)}`;
-                    b.shape.paint();
-                });
+            Object.keys(beacons).forEach(function (key) {
+                let b = beacons[key];
+                b.shape.fill = b === beacon;
+                b.shape.label = `${b.name} ${Math.round(b.avg())}`;
+                b.shape.paint();
+            });
 
             requestAnimationFrame(loop);
         }
@@ -270,7 +295,7 @@
             mqtt.client.subscribe("cyber/rssi");
         };
         mqtt.onMessage = (topic, payload) => {
-            console.log(payload);
+
             let vals = payload.split(',') //.slice(0, 3).map(n => Math.abs(parseFloat(n)));
             let address = vals[0].toUpperCase();
             let rssi = vals[1];
@@ -280,10 +305,10 @@
             let beacon = beacons[address];
 
             if (beacon !== undefined) {
-                beacon.values.add(-rssi);
-
-
-            }
+                beacon.add(-rssi);
+                console.log(beacon.name + ' avg ' + beacon.avg() + ' -- ' + address + ' ' + (-rssi))
+            } else
+                console.log(payload);
 
         };
         mqtt.connect();
