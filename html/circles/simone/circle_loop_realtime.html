@@ -4,11 +4,16 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <script type="text/javascript" src="paho-mqtt.js"></script>
+    <script type="text/javascript" src="utils.js"></script>
     <script type="text/javascript" src="main.js"></script>
 
     <style>
         canvas {
             border: 1px solid black;
+            /* width: 40%; */
+            /* height: 100%; */
+            background:url('./images/background.png');
+            background-size: 100% 100%;
         }
 
         body {
@@ -24,87 +29,28 @@
 </head>
 <body>
 <h1>This is the recordig done in openspace that loops continuously .</h1>
-<button onclick="connect()">Connect</button>
-<button onclick="disconnect()">Disconnect</button>
+<button onclick="mqtt.connect()">Connect</button>
+<button onclick="mqtt.disconnect()">Disconnect</button>
 
 <canvas></canvas>
 <div id="logdiv"></div>
 <div id="output"></div>
 <script>
 
-    function bind(caller) {
-        for (const key of Object.getOwnPropertyNames(caller.constructor.prototype)) {
-            const value = caller[key];
 
-            if (key !== 'constructor' && typeof value === 'function')
-                caller[key] = value.bind(caller);
-        }
-    }
-
-    class Hotkey {
-        //element can be window for global hotkeys
-        constructor(element) {
-            this.element = element
-            this.handlers = {};
-            this.debug = false;
-            bind(this);
-            element.addEventListener("keydown", this.handler, false);
-        }
-
-        add(hotkey, callback) {
-            if (this.debug)
-                console.log(`Registering hotkey ${hotkey}`);
-            this.handlers[hotkey.toUpperCase()] = callback;
-            return this;
-        }
-
-        handler(ke) {
-            if (!ke instanceof KeyboardEvent) return;
-            let key = ke.key;
-            if (key === 'Shift') return;
-            if (key === 'Control') return;
-            if (key === 'Alt') return;
-            if (key === 'Meta') return;
-            // val keh = KeyboardEventHelper(ke)
-
-            // if (!keh.allowed) return
-            let res = "";
-            if (ke.ctrlKey) res += "CONTROL-";
-            if (ke.shiftKey) res += "SHIFT-";
-            if (ke.altKey) res += "ALT-";
-            if (ke.metaKey) res += "META-";
-
-            let hotkey1 = res + ke.code;
-            let hotkey2 = res + ke.key;
-
-            if (this.debug)
-                console.log('hotkey recognize this two formats:', hotkey1, hotkey2);
-
-            let h = this.handlers[hotkey1.toUpperCase()];
-            if (h === undefined) h = this.handlers[hotkey2.toUpperCase()];
-            if (h === undefined) return;
-            h();
-            ke.preventDefault();
-            ke.stopPropagation();
-        }
-
-        enableDebug() {
-            this.debug = true;
-            return this;
-        }
-    }
-
-    class Beacon {
+    class Circle {
         constructor(ctx, color, coords) {
             this.ctx = ctx;
             this.x = 0;
             this.y = 0;
+            this.label = "";
             if (coords !== undefined) {
                 this.x = coords[0];
                 this.y = coords[1];
             }
             this.radius = 100;
             this.color = color;
+            this.fill = false;
         }
 
         paint() {
@@ -113,10 +59,42 @@
             // this.ctx.stroke();
 
             this.ctx.fillStyle = this.color;
-            // this.ctx.fill();
+            if (this.fill)
+                this.ctx.fill();
             this.ctx.lineWidth = 5;
             this.ctx.strokeStyle = this.color;
+
             this.ctx.stroke();
+
+            this.ctx.fillStyle = "black";
+            this.ctx.font = "bold 16px Arial";
+            this.ctx.fillText(this.label, this.x, this.y);
+        }
+    }
+
+    class MovingAverage {
+        constructor(windowSize) {
+            this.list = new Array();
+            this.windowSize = windowSize;
+            this.sum = 0;
+            this.average = 0;
+        }
+
+        add(value) {
+            this.sum += value;
+            this.list.push(value)
+            while (this.list.length > this.windowSize) {
+                let e = this.list.shift();
+                this.sum -= e;
+            }
+            this.average = this.sum / this.list.length;
+        }
+    }
+
+    class Beacon {
+        constructor(circle, averageWindow) {
+            this.circle = circle
+            this.values = new MovingAverage(averageWindow);
         }
     }
 
@@ -161,29 +139,50 @@
 
         let ctx = canvas.getContext('2d');
 
-        let coords = [[87, 235], [147, 118], [231, 236]];
+        let dx = 40;
+        let dy = 40;
+        let coords = [[87, 235 + dy], [147 + dx, 118], [231 + dx, 236 + dy]];
         let colors = ['red', 'green', 'blue'];
+        let names = ['BEN', 'CARL', 'DAVE']
         let beacons = Array(3);
+
 
         var selectedBeacon = undefined;
         for (i = 0; i < beacons.length; i++) {
             let idx = i + 1;
             let color = colors[i];
-            let b = new Beacon(ctx, color, coords[i]);
-            beacons[i] = b;
-            hotkey.add("Key" + color[0], () => {
+            let circle = new Circle(ctx, color, coords[i]);
+            let movingAverageWindow = 18;
+            let beacon = new Beacon(circle, movingAverageWindow);
+            beacons[i] = beacon;
+            hotkey.add("Key" + names[i][0], () => {
                 console.log('Selected beacon ' + idx);
                 selectedBeacon = beacons[idx - 1];
             });
+        }
+
+        function closerBeaconIdx() {
+            let m = 1000;
+            let res = 0;
+            for (let i = 0; i < beacons.length; i++) {
+                let beacon = beacons[i];
+                if (m > beacon.values.average) {
+                    m = beacon.values.average;
+                    res = i;
+                }
+
+            }
+            return res;
         }
 
         canvas.addEventListener('click', (e) => {
             if (selectedBeacon !== undefined) {
                 let x = e.offsetX;
                 let y = e.offsetY;
-                console.log(`Moving ${selectedBeacon.color} to (${x},${y})`);
-                selectedBeacon.x = x;
-                selectedBeacon.y = y;
+                let circle = selectedBeacon.circle;
+                console.log(`Moving ${circle.color} to (${x},${y})`);
+                circle.x = x;
+                circle.y = y;
                 selectedBeacon = undefined;
             }
         });
@@ -191,9 +190,11 @@
         function loop(time) {  // microsecond timer 1/1,000,000 accuracy in ms 1/1000th
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
             csv.next();
+            let closerIdx = closerBeaconIdx();
             beacons.forEach((b, idx) => {
-                b.radius = csv.get(idx);
-                b.paint();
+                // b.radius = csv.get(idx);
+                b.circle.fill = closerIdx === idx;
+                b.circle.paint();
             });
 
             requestAnimationFrame(loop);
@@ -204,7 +205,29 @@
         hotkey.add('t', () => {
 
 
-        })
+        });
+
+        mqtt = new MqttClient();
+        mqtt.onConnected = () => {
+            mqtt.client.subscribe("cyber/rssi");
+        };
+        mqtt.onMessage = (topic, payload) => {
+            let vals = payload.split(',').slice(0, 3).map(n => Math.abs(parseFloat(n)));
+            let line = "";
+            for (i = 0; i < beacons.length; i++) {
+                let beacon = beacons[i];
+                let value = vals[i];
+                if (value != 0) {
+                    beacon.values.add(value);
+                    beacon.circle.radius = Math.pow((beacon.values.average - 20) * 1.9, 1.00);
+                    beacon.circle.label = `${names[i]} ${Math.round(beacon.values.average)}`;
+                    line = `${line}${Math.round(beacon.values.average)} `
+                }
+            }
+            console.log(line, vals);
+        };
+        mqtt.connect();
+
     }
 
     let content = `-54.09,-73.9,-71.77000000000001
