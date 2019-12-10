@@ -184,7 +184,7 @@
 
         let colors = ['red', 'green', 'blue'];
         let names = ['BEN', 'CARL', 'DAVE']
-        let beacons = Array(3);
+        let beacons = {};
 
 
         var selectedBeacon = undefined;
@@ -201,17 +201,18 @@
             });
         }
 
-        function closerBeaconIdx() {
+        function closerBeacon() {
             let m = 1000;
-            let res = 0;
-            for (let i = 0; i < beacons.length; i++) {
-                let beacon = beacons[i];
+            let res = undefined;
+
+            Object.keys(beacons).forEach(function(key) {
+                let beacon = beacons[key];
                 if (m > beacon.values.average) {
                     m = beacon.values.average;
-                    res = i;
+                    res = beacon;
                 }
+            });
 
-            }
             return res;
         }
 
@@ -229,9 +230,10 @@
 
         function loop(time) {  // microsecond timer 1/1,000,000 accuracy in ms 1/1000th
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            let closerIdx = closerBeaconIdx();
-            beacons.forEach((b, idx) => {
-                b.shape.fill = closerIdx === idx;
+            let beacon = closerBeacon();
+            Object.keys(beacons).forEach(function(key) {
+                let b = beacons[key];
+                b.shape.fill = b === beacon;
                 b.shape.paint();
             });
 
