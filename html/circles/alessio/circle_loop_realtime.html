@@ -134,8 +134,6 @@
     }
 
     class Beacon {
-        // constructor(circle, averageWindow) {
-        //     this.circle = circle
         constructor(shape, averageWindow) {
             this.shape = shape
             this.values = new MovingAverage(averageWindow);
@@ -167,7 +165,6 @@
     }
 
     function run() {
-        // let csv = new Csv(content);
         let hotkey = new Hotkey(window);
         hotkey.enableDebug();
 
@@ -183,9 +180,6 @@
 
         let ctx = canvas.getContext('2d');
 
-        let dx = 40;
-        let dy = 40;
-        // let coords = [[87, 235 + dy], [147 + dx, 118], [231 + dx, 236 + dy]];
         let coords = [[100, 100], [200, 200], [300, 300]];
 
         let colors = ['red', 'green', 'blue'];
@@ -197,10 +191,8 @@
         for (i = 0; i < beacons.length; i++) {
             let idx = i + 1;
             let color = colors[i];
-            // let circle = new Circle(ctx, color, coords[i]);
             let rectangle = new Rectangle(ctx, color, coords[i], canvas)
             let movingAverageWindow = 18;
-            // let beacon = new Beacon(circle, movingAverageWindow);
             let beacon = new Beacon(rectangle, movingAverageWindow);
             beacons[i] = beacon;
             hotkey.add("Key" + names[i][0], () => {
@@ -227,10 +219,6 @@
             if (selectedBeacon !== undefined) {
                 let x = e.offsetX;
                 let y = e.offsetY;
-                // let circle = selectedBeacon.circle;
-                // console.log(`Moving ${circle.color} to (${x},${y})`);
-                // circle.x = x;
-                // circle.y = y;
                 let shape = selectedBeacon.shape;
                 console.log(`Moving ${shape.color} to (${x},${y})`);
                 shape.x = x;
@@ -241,10 +229,8 @@
 
         function loop(time) {  // microsecond timer 1/1,000,000 accuracy in ms 1/1000th
             ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-            // csv.next();
             let closerIdx = closerBeaconIdx();
             beacons.forEach((b, idx) => {
-                // b.radius = csv.get(idx);
                 b.shape.fill = closerIdx === idx;
                 b.shape.paint();
             });
@@ -271,12 +257,11 @@
                 let value = vals[i];
                 if (value != 0) {
                     beacon.values.add(value);
-                    // beacon.circle.radius = Math.pow((beacon.values.average - 20) * 1.9, 1.00);
                     beacon.shape.label = `${names[i]} ${Math.round(beacon.values.average)}`;
                     line = `${line}${Math.round(beacon.values.average)} `
                 }
             }
-            // console.log(line, vals);
+            console.log(line, vals);
         };
         mqtt.connect();
 
