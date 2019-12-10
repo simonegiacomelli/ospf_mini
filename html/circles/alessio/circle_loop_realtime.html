@@ -12,7 +12,7 @@
             border: 1px solid black;
             width: 100%;
             height: 100%;
-            background:url('./images/background.png');
+            background: url('./images/background.png');
             background-size: 100% 100%;
         }
 
@@ -77,8 +77,8 @@
             this.ctx = ctx;
 
             this.height = 120;
-            this.width = canvas.width/4;  
-            
+            this.width = canvas.width / 4;
+
             this.x = 0;
             this.y = 0;
 
@@ -87,7 +87,7 @@
             if (coords !== undefined) {
                 this.x = coords[0];
                 this.y = coords[1];
-                console.log(this.x,this.y);
+                console.log(this.x, this.y);
 
             }
             this.color = color;
@@ -96,9 +96,9 @@
         }
 
         paint() {
-            this.ctx.beginPath();        
+            this.ctx.beginPath();
             this.ctx.rect(this.x, this.y, this.width, this.height);
-            
+
             this.ctx.fillStyle = this.color;
             if (this.fill)
                 this.ctx.fill();
@@ -110,7 +110,7 @@
             this.ctx.fillStyle = "black";
             this.ctx.font = "bold 16px Arial";
             this.ctx.fillText(this.label, this.x, this.y);
-            
+
         }
     }
 
@@ -208,7 +208,7 @@
                 let beacon = beacons[i];
                 if (m > beacon.values.average) {
                     m = beacon.values.average;
-                    res = i;    
+                    res = i;
                 }
 
             }
@@ -250,7 +250,9 @@
             mqtt.client.subscribe("cyber/rssi");
         };
         mqtt.onMessage = (topic, payload) => {
-            let vals = payload.split(',').slice(0, 3).map(n => Math.abs(parseFloat(n)));
+            console.log(payload);
+            //let vals = payload.split(',').slice(0, 3).map(n => Math.abs(parseFloat(n)));
+
             let line = "";
             for (i = 0; i < beacons.length; i++) {
                 let beacon = beacons[i];
@@ -261,11 +263,12 @@
                     line = `${line}${Math.round(beacon.values.average)} `
                 }
             }
-            console.log(line, vals);
+
         };
         mqtt.connect();
 
     }
+
     run();
 </script>
 </body>
