@@ -28,12 +28,11 @@
     </style>
 </head>
 <body>
-<h1>This is the recordig done in openspace that loops continuously .</h1>
+
 <button onclick="mqtt.connect()">Connect</button>
 <button onclick="mqtt.disconnect()">Disconnect</button>
-
+messages received: <span id="linediv">0</span>
 <canvas></canvas>
-<div id="linediv">0</div>
 <div id="output"></div>
 <script>
 
