@@ -1,3 +1,7 @@
+function millis() {
+    return Date.now();
+}
+
 function bind(caller) {
     for (const key of Object.getOwnPropertyNames(caller.constructor.prototype)) {
         const value = caller[key];
@@ -58,4 +62,61 @@ class Hotkey {
         this.debug = true;
         return this;
     }
+}
+
+
+class Rate {
+    constructor(windowSecs) {
+        this.windowSecs = windowSecs;
+        this.counter = [];
+        this.spinCount = 0;
+        this.trackedSecond = -1;
+        this.reset();
+    }
+
+    reset() {
+        this.counter = [];
+        this.counter.push(0);
+        this.trackedSecond = this.currentSecond();
+        return this;
+    }
+
+    spin() {
+        this.spinCount++;
+        let currentSecond = this.currentSecond();
+
+        let secs = currentSecond - this.trackedSecond;
+        while (secs > 0) {
+            this.counter.splice(0, 0, 0);
+            secs--;
+        }
+
+
+        let exceedSize = this.counter.length - this.windowSecs;
+        while (exceedSize > 0) {
+            this.counter.pop();
+            exceedSize--;
+        }
+
+        this.counter[0]++;
+
+        this.trackedSecond = currentSecond;
+    }
+
+    currentSecond() {
+        let current = millis();
+        let cs = Math.trunc(current / 1000);
+        return cs;
+    }
+
+    rate() {
+        if (this.counter.length === 0) return 0.0;
+        let result = 0;
+        for (let i = 0; i < this.counter.length; i++) {
+            result += this.counter[i];
+        }
+        return result / this.counter.length;
+    }
+
+
 }

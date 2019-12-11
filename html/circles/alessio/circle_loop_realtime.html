@@ -36,9 +36,6 @@ messages received: <span id="linediv">0</span>
 <div id="output"></div>
 <script>
 
-    function millis() {
-        return Date.now();
-    }
 
     class Circle {
         constructor(ctx, color, coords) {
@@ -144,6 +141,7 @@ messages received: <span id="linediv">0</span>
             this._ma = new MovingAverage(averageWindow);
             this.name = name;
             this.lastReading = 0;
+            this.rate = new Rate(4);
         }
 
         add(value) {
@@ -151,6 +149,7 @@ messages received: <span id="linediv">0</span>
                 this._ma.clear();
             this._ma.add(value);
             this.lastReading = millis();
+            this.rate.spin();
         }
 
         avg() {
@@ -221,7 +220,7 @@ messages received: <span id="linediv">0</span>
         for (i = 0; i < names.length; i++) {
             let address = addresses[i].toUpperCase();
             let name = names[i];
-            let rectangle = new Rectangle(ctx, "red", [i * rect_w / 2, i * rect_h], canvas, [rect_w, rect_h]);
+            let rectangle = new Rectangle(ctx, "red", [i * 10, i * rect_h], canvas, [rect_w, rect_h]);
             let movingAverageWindow = 10;
             let beacon = new Beacon(rectangle, movingAverageWindow, name);
             beacons[address] = beacon;
@@ -274,7 +273,7 @@ messages received: <span id="linediv">0</span>
             Object.keys(beacons).forEach(function (key) {
                 let b = beacons[key];
                 b.shape.fill = b === beacon;
-                b.shape.label = `${b.name} ${Math.round(b.avg())}`;
+                b.shape.label = `${b.name} ${Math.round(b.avg())} r:${Math.round(b.rate.rate() * 10) / 10}`;
                 b.shape.paint();
             });
             currentBeacon = beacon;
