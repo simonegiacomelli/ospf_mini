@@ -83,6 +83,11 @@ class Rate {
 
     spin() {
         this.spinCount++;
+        this.update();
+        this.counter[0]++;
+    }
+
+    update() {
         let currentSecond = this.currentSecond();
 
         let secs = currentSecond - this.trackedSecond;
@@ -91,16 +96,13 @@ class Rate {
             secs--;
         }
 
-
         let exceedSize = this.counter.length - this.windowSecs;
         while (exceedSize > 0) {
             this.counter.pop();
             exceedSize--;
         }
-
-        this.counter[0]++;
-
         this.trackedSecond = currentSecond;
+
     }
 
     currentSecond() {
@@ -110,6 +112,7 @@ class Rate {
     }
 
     rate() {
+        this.update();
         if (this.counter.length === 0) return 0.0;
         let result = 0;
         for (let i = 0; i < this.counter.length; i++) {
