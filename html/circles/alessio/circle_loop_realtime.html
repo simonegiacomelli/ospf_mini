@@ -33,7 +33,7 @@
 <button onclick="mqtt.disconnect()">Disconnect</button>
 
 <canvas></canvas>
-<div id="logdiv"></div>
+<div id="linediv">0</div>
 <div id="output"></div>
 <script>
 
@@ -193,11 +193,12 @@
 
     function run() {
 
+        let messageCount = 0;
         let hotkey = new Hotkey(window);
         hotkey.enableDebug();
 
         let canvas = document.querySelector('canvas');
-        let logdiv = document.getElementById('logdiv');
+        let linediv = document.getElementById('linediv');
 
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight - 100;
@@ -222,12 +223,6 @@
             let beacon = new Beacon(rectangle, movingAverageWindow, name);
             beacons[address] = beacon;
         }
-
-
-        function log(line) {
-            logdiv.innerHTML += '<br>' + line;
-        }
-
 
         var selectedBeacon = undefined;
         for (i = 0; i < beacons.length; i++) {
@@ -295,7 +290,11 @@
             mqtt.client.subscribe("cyber/rssi");
         };
         mqtt.onMessage = (topic, payload) => {
-
+            messageCount += 1;
+            linediv.innerHTML = "" + messageCount;
+            if (payload.startsWith("DEBUG,")) {
+                return;
+            }
             let vals = payload.split(',') //.slice(0, 3).map(n => Math.abs(parseFloat(n)));
             let address = vals[0].toUpperCase();
             let rssi = vals[1];
