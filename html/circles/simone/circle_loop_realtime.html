@@ -296,6 +296,7 @@ messages received: <span id="linediv">0</span>
             messageCount += 1;
             linediv.innerHTML = "" + messageCount;
             if (payload.startsWith("DEBUG,")) {
+                console.log(payload);
                 return;
             }
             let vals = payload.split(',') //.slice(0, 3).map(n => Math.abs(parseFloat(n)));
