@@ -108,8 +108,14 @@ messages received: <span id="linediv">0</span>
             this.ctx.fillStyle = "black";
             this.ctx.font = "bold 10px Arial";
             // this.ctx.fillText(this.label, this.x + 20, this.y + 40);
-            this.ctx.fillText(this.label, this.x + 1, this.y + 10);
-            console.log(this.label, this.x, this.y)
+
+            // https://stackoverflow.com/questions/5026961/html5-canvas-ctx-filltext-wont-do-line-breaks
+            var lines = this.label.split('\n');
+            var lineheight = 10;
+            console.log(lines)
+            for (var i = 0; i<lines.length; i++){
+                this.ctx.fillText(lines[i], this.x + 1, this.y + 10 + (i*lineheight));
+            }
         }
     }
 
@@ -304,7 +310,7 @@ messages received: <span id="linediv">0</span>
                 b.shape.label = ''
                 b.shape.stroke = false
                 if(document.querySelector('#debug_checkbox').checked){
-                    b.shape.label = `${b.name} ${Math.round(b.avg())} r:${Math.round(b.rate.rate() * 10) / 10}`;
+                    b.shape.label = `${b.name} ${Math.round(b.avg())} \nr:${Math.round(b.rate.rate() * 10) / 10}`;
                     b.shape.stroke = true
                 }
                 b.shape.paint();
