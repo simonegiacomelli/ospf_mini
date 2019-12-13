@@ -62,11 +62,6 @@ messages received: <span id="linediv">0</span>
             this.ctx.fillStyle = this.color;
             if (this.fill)
                 this.ctx.fill();
-            this.ctx.lineWidth = 5;
-            this.ctx.strokeStyle = this.color;
-
-            this.ctx.stroke();
-
             this.ctx.fillStyle = "black";
             this.ctx.font = "bold 16px Arial";
             this.ctx.fillText(this.label, this.x, this.y);
@@ -92,6 +87,7 @@ messages received: <span id="linediv">0</span>
             }
             this.color = color;
             this.fill = false;
+            this.stroke = false;
 
         }
 
@@ -102,18 +98,17 @@ messages received: <span id="linediv">0</span>
             this.ctx.fillStyle = this.color;
             if (this.fill)
                 this.ctx.fill();
-            this.ctx.lineWidth = 2;
-            this.ctx.strokeStyle = this.color;
 
-            this.ctx.stroke();
+            if(this.stroke){
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeStyle = this.color;
+                this.ctx.stroke();
+            }
 
             this.ctx.fillStyle = "black";
             this.ctx.font = "bold 10px Arial";
             // this.ctx.fillText(this.label, this.x + 20, this.y + 40);
-            console.log(this.label)
-            this.ctx.fillText(this.label, this.x + 20, this.y);
-
-
+            this.ctx.fillText(this.label, this.x, this.y);
         }
     }
 
@@ -232,7 +227,7 @@ messages received: <span id="linediv">0</span>
 
         rect_coords.push([canvas.width - (rect_h * 2 - 30), rect_h])
         rect_dimension.push([rect_h * 2 - 30, canvas.height - (2*rect_h)])
-
+        
         for (i = 0; i < n_beacons/2; i++) {
             rect_coords.push([x, y])
             rect_dimension.push([rect_w, rect_h])
@@ -306,8 +301,10 @@ messages received: <span id="linediv">0</span>
                 let b = beacons[key];
                 b.shape.fill = b === beacon;
                 b.shape.label = ''
+                b.shape.stroke = false
                 if(document.querySelector('#debug_checkbox').checked){
                     b.shape.label = `${b.name} ${Math.round(b.avg())} r:${Math.round(b.rate.rate() * 10) / 10}`;
+                    b.shape.stroke = true
                 }
                 b.shape.paint();
             });
