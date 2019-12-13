@@ -29,7 +29,7 @@
 </head>
 <body>
 
-<input  type="checkbox" id='debug_checkbox' checked></input>
+<input  type="checkbox" id='debug_checkbox' checked="false"></input>
 <label for="debug_checkbox">Debug</label>
 
 <button onclick="mqtt.connect()">Connect</button>
@@ -99,11 +99,11 @@ messages received: <span id="linediv">0</span>
             if (this.fill)
                 this.ctx.fill();
 
-            if(this.stroke){
-                this.ctx.lineWidth = 2;
-                this.ctx.strokeStyle = this.color;
-                this.ctx.stroke();
-            }
+            // if(this.stroke){
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeStyle = this.color;
+            this.ctx.stroke();
+            // }
 
             this.ctx.fillStyle = "black";
             this.ctx.font = "bold 10px Arial";
@@ -308,10 +308,8 @@ messages received: <span id="linediv">0</span>
                 let b = beacons[key];
                 b.shape.fill = b === beacon;
                 b.shape.label = ''
-                b.shape.stroke = false
                 if(document.querySelector('#debug_checkbox').checked){
                     b.shape.label = `${b.name} ${Math.round(b.avg())} \nr:${Math.round(b.rate.rate() * 10) / 10}`;
-                    b.shape.stroke = true
                 }
                 b.shape.paint();
             });
