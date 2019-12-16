@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="paho-mqtt.js"></script>
+    <script type="text/javascript" src="utils.js"></script>
+    <script type="text/javascript" src="main.js"></script>
+
+    <style>
+        canvas {
+            border: 1px solid black;
+            width: 100%;
+            height: 100%;
+            background: url('./images/background.png');
+            background-size: 100% 100%;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        #output {
+            overflow: auto;
+            max-height: 500px;
+            border: solid 1px black;
+        }
+    </style>
+</head>
+<body>
+
+<button onclick="mqtt.connect()">Connect</button>
+<button onclick="mqtt.disconnect()">Disconnect</button>
+messages received: <span id="linediv">0</span>
+<canvas></canvas>
+<div id="output"></div>
+<script>
+
+
+    class Circle {
+        constructor(ctx, color, coords) {
+            this.ctx = ctx;
+            this.x = 0;
+            this.y = 0;
+            this.label = "";
+            if (coords !== undefined) {
+                this.x = coords[0];
+                this.y = coords[1];
+            }
+            this.radius = 100;
+            this.color = color;
+            this.fill = false;
+        }
+
+        paint() {
+            this.ctx.beginPath();
+            this.ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, false);
+            // this.ctx.stroke();
+
+            this.ctx.fillStyle = this.color;
+            if (this.fill)
+                this.ctx.fill();
+            this.ctx.lineWidth = 5;
+            this.ctx.strokeStyle = this.color;
+
+            this.ctx.stroke();
+
+            this.ctx.fillStyle = "black";
+            this.ctx.font = "bold 16px Arial";
+            this.ctx.fillText(this.label, this.x, this.y);
+        }
+    }
+
+    class Rectangle {
+        constructor(ctx, color, coords, canvas, size) {
+            this.ctx = ctx;
+
+            this.size = size;
+
+            this.x = 0;
+            this.y = 0;
+
+            this.label = "";
+
+            if (coords !== undefined) {
+                this.x = coords[0];
+                this.y = coords[1];
+                console.log(this.x, this.y);
+
+            }
+            this.color = color;
+            this.fill = false;
+
+        }
+
+        paint() {
+            this.ctx.beginPath();
+            this.ctx.rect(this.x, this.y, this.size[0], this.size[1]);
+
+            this.ctx.fillStyle = this.color;
+            if (this.fill)
+                this.ctx.fill();
+            this.ctx.lineWidth = 5;
+            this.ctx.strokeStyle = this.color;
+
+            this.ctx.stroke();
+
+            this.ctx.fillStyle = "black";
+            this.ctx.font = "bold 32px Arial";
+            this.ctx.fillText(this.label, this.x + 20, this.y + 40);
+
+        }
+    }
+
+    class MovingAverage {
+        constructor(windowSize) {
+            this.clear();
+            this.windowSize = windowSize;
+        }
+
+        add(value) {
+            this.sum += value;
+            this.list.push(value)
+            while (this.list.length > this.windowSize) {
+                let e = this.list.shift();
+                this.sum -= e;
+            }
+            this.average = this.sum / this.list.length;
+        }
+
+        clear() {
+            this.list = [];
+            this.sum = 0;
+            this.average = 0;
+        }
+    }
+
+    class Beacon {
+        constructor(shape, averageWindow, name) {
+            this.shape = shape
+            this._ma = new MovingAverage(averageWindow);
+            this.name = name;
+            this.lastReading = 0;
+            this.rate = new Rate(4);
+        }
+
+        add(value) {
+            if (this.isOld())
+                this._ma.clear();
+            this._ma.add(value);
+            this.lastReading = millis();
+            this.rate.spin();
+        }
+
+        avg() {
+            if (this.isOld()) return 1000;
+            if (this._ma.list.length === 0) return 1000;
+            return this._ma.average;
+        }
+
+        readingsCount() {
+            return this._ma.list.length;
+        }
+
+        isOld() {
+            let millis1 = millis();
+            let number = millis1 - this.lastReading;
+            return number > 3000;
+        }
+    }
+
+    class Csv {
+        constructor(content) {
+            this.t = 0;
+            this.lines = content.split('\n');
+            this.n = this.lines.length;
+            this.rows = Array(this.n);
+            for (let i = 0; i < this.n; i++) {
+                let line = this.lines[i];
+                let vals = line.split(',').map(n => Math.abs(parseFloat(n)));
+                this.rows[i] = vals;
+            }
+        }
+
+        next() {
+            this.t++;
+            if (this.t >= this.n)
+                this.t = 0;
+        }
+
+        get(idx) {
+            return this.rows[this.t][idx];
+        }
+    }
+
+    function run() {
+        var currentBeacon = undefined;
+        let messageCount = 0;
+        let hotkey = new Hotkey(window);
+        hotkey.enableDebug();
+
+        let canvas = document.querySelector('canvas');
+        let linediv = document.getElementById('linediv');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - 100;
+
+        let ctx = canvas.getContext('2d');
+
+
+        let addresses = ["d5:61:6b:fb:8d:e3", "d6:82:a5:47:bf:ac", "c5:7c:30:e4:a5:66", "f3:4e:e8:df:11:bc", "dc:45:a3:e5:90:41", "c2:e3:b0:2b:b9:bf","f8:da:5e:36:6f:d7","fb:9a:08:46:2e:5b"];
+        let names = ["BEN", "CARL", "DAVE", "SIMO", "ANDREA", "ALE", "WEI1","WEI2"];
+
+        let n_beacons = addresses.length - 2;
+
+        let rect_h = canvas.height / 6;
+        let rect_w = canvas.width / (n_beacons/2);
+        let beacons = {};
+
+
+        x = 0
+        y = 0
+        let rect_coords = []
+        let rect_dimension = []
+
+        rect_coords.push([0, rect_h])
+        rect_dimension.push([rect_h * 2 - 25, canvas.height - (2*rect_h)])
+
+        rect_coords.push([canvas.width - (rect_h * 2 - 30), rect_h])
+        rect_dimension.push([rect_h * 2 - 30, canvas.height - (2*rect_h)])
+
+        for (i = 0; i < n_beacons/2; i++) {
+            rect_coords.push([x, y])
+            rect_dimension.push([rect_w, rect_h])
+            x = x + rect_w
+        }
+
+        x = 0
+        y = canvas.height - rect_h
+        for (i = 0; i < n_beacons/2; i++) {
+            rect_coords.push([x, y])
+            rect_dimension.push([rect_w, rect_h])
+            x = x + rect_w
+        }
+
+        console.log(rect_coords)
+
+
+        for (i = 0; i < names.length; i++) {
+            let address = addresses[i].toUpperCase();
+            let name = names[i];
+            // let rectangle = new Rectangle(ctx, "red", [i * 10, i * rect_h], canvas, [rect_w, rect_h]);
+            let rectangle = new Rectangle(ctx, "red", rect_coords[i], canvas, rect_dimension[i]);
+            
+            let movingAverageWindow = 10;
+            let beacon = new Beacon(rectangle, movingAverageWindow, name);
+            beacons[address] = beacon;
+        }
+
+        var selectedBeacon = undefined;
+        for (i = 0; i < beacons.length; i++) {
+            // let idx = i + 1;
+            // let color = colors[i];
+            // let rectangle = new Rectangle(ctx, color, coords[i], canvas)
+            // let movingAverageWindow = 18;
+            // let beacon = new Beacon(rectangle, movingAverageWindow);
+            // beacons[i] = beacon;
+            // hotkey.add("Key" + names[i][0], () => {
+            //     console.log('Selected beacon ' + idx);
+            //     selectedBeacon = beacons[idx - 1];
+            // });
+        }
+
+        function findCloserBeacon() {
+            let m = 1000;
+            let res = undefined;
+
+            Object.keys(beacons).forEach(function (key) {
+                let b = beacons[key];
+                if (!b.isOld() && m > b.avg() && b.readingsCount() > 4) {
+                    m = b.avg();
+                    res = b;
+                }
+            });
+
+            return res;
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (selectedBeacon !== undefined) {
+                let x = e.offsetX;
+                let y = e.offsetY;
+                let shape = selectedBeacon.shape;
+                console.log(`Moving ${shape.color} to (${x},${y})`);
+                shape.x = x;
+                shape.y = y;
+                selectedBeacon = undefined;
+            }
+        });
+
+        function loop(time) {  // microsecond timer 1/1,000,000 accuracy in ms 1/1000th
+            ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            let beacon = findCloserBeacon();
+            Object.keys(beacons).forEach(function (key) {
+                let b = beacons[key];
+                b.shape.fill = b === beacon;
+                b.shape.label = `${b.name} ${Math.round(b.avg())} r:${Math.round(b.rate.rate() * 10) / 10}`;
+                b.shape.paint();
+            });
+            currentBeacon = beacon;
+
+            requestAnimationFrame(loop);
+        }
+
+        requestAnimationFrame(loop);
+
+        hotkey.add('t', () => {
+
+
+        });
+
+        mqtt = new MqttClient();
+        mqtt.onConnected = () => {
+            mqtt.client.subscribe("cyber/rssi");
+        };
+        mqtt.onMessage = (topic, payload) => {
+            messageCount += 1;
+            linediv.innerHTML = "" + messageCount;
+            if (payload.startsWith("DEBUG,")) {
+                return;
+            }
+            let vals = payload.split(',') //.slice(0, 3).map(n => Math.abs(parseFloat(n)));
+            let address = vals[0].toUpperCase();
+            let rssi = vals[1];
+            // let name = vals[2];
+            // let millis = Math.abs(vals[3]);
+            let cb = "";
+            if (currentBeacon !== undefined)
+                cb = currentBeacon.name;
+            let beacon = beacons[address];
+
+            if (beacon !== undefined) {
+                beacon.add(-rssi);
+                console.log(beacon.name + ' avg ' + beacon.avg() + ' - ' + (-rssi) + ' cur ' + cb);
+            } else
+                console.log(payload);
+
+        };
+        mqtt.connect();
+
+    }
+
+    run();
+</script>
+</body>
+</html>
