@@ -9,11 +9,14 @@
 
     <style>
         canvas {
-            border: 1px solid black;
-            width: 100%;
-            height: 100%;
+            /* border: 1px solid black; */
+            width: 90%;
+            height: 90%;
             background: url('./images/background.png');
             background-size: 100% 100%;
+            margin: auto;
+            display: block;
+            /* transform: rotate(90deg) translateX(380px); */
         }
 
         body {
@@ -23,11 +26,14 @@
         #output {
             overflow: auto;
             max-height: 500px;
-            border: solid 1px black;
+            /* border: solid 1px black; */
         }
     </style>
 </head>
 <body>
+
+<input  type="checkbox" id='debug_checkbox'></input>
+<label for="debug_checkbox">Debug</label>
 
 <button onclick="mqtt.connect()">Connect</button>
 <button onclick="mqtt.disconnect()">Disconnect</button>
@@ -35,7 +41,6 @@ messages received: <span id="linediv">0</span>
 <canvas></canvas>
 <div id="output"></div>
 <script>
-
 
     class Circle {
         constructor(ctx, color, coords) {
@@ -60,11 +65,6 @@ messages received: <span id="linediv">0</span>
             this.ctx.fillStyle = this.color;
             if (this.fill)
                 this.ctx.fill();
-            this.ctx.lineWidth = 5;
-            this.ctx.strokeStyle = this.color;
-
-            this.ctx.stroke();
-
             this.ctx.fillStyle = "black";
             this.ctx.font = "bold 16px Arial";
             this.ctx.fillText(this.label, this.x, this.y);
@@ -90,6 +90,7 @@ messages received: <span id="linediv">0</span>
             }
             this.color = color;
             this.fill = false;
+            this.stroke = false;
 
         }
 
@@ -100,15 +101,23 @@ messages received: <span id="linediv">0</span>
             this.ctx.fillStyle = this.color;
             if (this.fill)
                 this.ctx.fill();
-            this.ctx.lineWidth = 5;
-            this.ctx.strokeStyle = this.color;
 
+            // if(this.stroke){
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeStyle = this.color;
             this.ctx.stroke();
+            // }
 
             this.ctx.fillStyle = "black";
-            this.ctx.font = "bold 32px Arial";
-            this.ctx.fillText(this.label, this.x + 20, this.y + 40);
+            this.ctx.font = "bold 10px Arial";
+            // this.ctx.fillText(this.label, this.x + 20, this.y + 40);
 
+            // https://stackoverflow.com/questions/5026961/html5-canvas-ctx-filltext-wont-do-line-breaks
+            var lines = this.label.split('\n');
+            var lineheight = 10;
+            for (var i = 0; i<lines.length; i++){
+                this.ctx.fillText(lines[i], this.x + 1, this.y + 10 + (i*lineheight));
+            }
         }
     }
 
@@ -202,39 +211,40 @@ messages received: <span id="linediv">0</span>
         let canvas = document.querySelector('canvas');
         let linediv = document.getElementById('linediv');
 
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - 100;
+        // canvas.width = window.innerWidth;
+        // canvas.height = window.innerHeight - 100;
 
         let ctx = canvas.getContext('2d');
 
-
-        let addresses = ["d5:61:6b:fb:8d:e3", "d6:82:a5:47:bf:ac", "c5:7c:30:e4:a5:66", "f3:4e:e8:df:11:bc", "dc:45:a3:e5:90:41", "c2:e3:b0:2b:b9:bf","f8:da:5e:36:6f:d7","fb:9a:08:46:2e:5b"];
-        let names = ["BEN", "CARL", "DAVE", "SIMO", "ANDREA", "ALE", "WEI1","WEI2"];
-
+        let names = ["WEI", "WEI2", "SIMO", "ANDRE", "ALE", "DAVE", "CARL", "BEN"]
+        let addresses = ["f8:da:5e:36:6f:d7", "fb:9a:08:46:2e:5b", "f3:4e:e8:df:11:bc", "dc:45:a3:e5:90:41", "c2:e3:b0:2b:b9:bf", "c5:7c:30:e4:a5:66", "d6:82:a5:47:bf:ac", "d5:61:6b:fb:8d:e3"]
         let n_beacons = addresses.length - 2;
 
         let rect_h = canvas.height / 6;
         let rect_w = canvas.width / (n_beacons/2);
         let beacons = {};
 
-
         x = 0
         y = 0
         let rect_coords = []
         let rect_dimension = []
 
+        // west rectangle
         rect_coords.push([0, rect_h])
-        rect_dimension.push([rect_h * 2 - 25, canvas.height - (2*rect_h)])
+        rect_dimension.push([rect_h * 2 - 7, canvas.height - (2*rect_h)])
 
-        rect_coords.push([canvas.width - (rect_h * 2 - 30), rect_h])
-        rect_dimension.push([rect_h * 2 - 30, canvas.height - (2*rect_h)])
+        // east rectangle
+        rect_coords.push([canvas.width - (rect_h * 2 - 8), rect_h])
+        rect_dimension.push([rect_h * 2 - 8, canvas.height - (2*rect_h)])
 
+        // nord rectangleds
         for (i = 0; i < n_beacons/2; i++) {
             rect_coords.push([x, y])
             rect_dimension.push([rect_w, rect_h])
             x = x + rect_w
         }
 
+        // sud rectangles
         x = 0
         y = canvas.height - rect_h
         for (i = 0; i < n_beacons/2; i++) {
@@ -243,15 +253,12 @@ messages received: <span id="linediv">0</span>
             x = x + rect_w
         }
 
-        console.log(rect_coords)
-
-
         for (i = 0; i < names.length; i++) {
             let address = addresses[i].toUpperCase();
             let name = names[i];
             // let rectangle = new Rectangle(ctx, "red", [i * 10, i * rect_h], canvas, [rect_w, rect_h]);
-            let rectangle = new Rectangle(ctx, "red", rect_coords[i], canvas, rect_dimension[i]);
-            
+            let rectangle = new Rectangle(ctx, "LightGreen", rect_coords[i], canvas, rect_dimension[i]);
+
             let movingAverageWindow = 10;
             let beacon = new Beacon(rectangle, movingAverageWindow, name);
             beacons[address] = beacon;
@@ -304,7 +311,10 @@ messages received: <span id="linediv">0</span>
             Object.keys(beacons).forEach(function (key) {
                 let b = beacons[key];
                 b.shape.fill = b === beacon;
-                b.shape.label = `${b.name} ${Math.round(b.avg())} r:${Math.round(b.rate.rate() * 10) / 10}`;
+                b.shape.label = ''
+                if(document.querySelector('#debug_checkbox').checked){
+                    b.shape.label = `${b.name} ${Math.round(b.avg())} \nr:${Math.round(b.rate.rate() * 10) / 10}`;
+                }
                 b.shape.paint();
             });
             currentBeacon = beacon;
@@ -350,6 +360,7 @@ messages received: <span id="linediv">0</span>
 
     }
 
+    document.querySelector('#debug_checkbox').checked = false;
     run();
 </script>
 </body>
